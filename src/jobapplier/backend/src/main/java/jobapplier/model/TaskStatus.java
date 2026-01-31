@@ -1,5 +1,5 @@
 
-package jobapplier.src.model;
+package jobapplier.model;
 
 public enum TaskStatus {
     PENDING,

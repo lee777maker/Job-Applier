@@ -1,4 +1,4 @@
-package jobapplier.src.api;
+package jobapplier.api;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -6,6 +6,7 @@ import java.util.UUID;
 import jobapplier.model.*;
 import jobapplier.repository.*;
 import jobapplier.ai.AIClient;
+import jobapplier.ai.AIResult;
 import jobapplier.audit.AuditService;
 import jobapplier.workflow.ApplicationStatus;
 

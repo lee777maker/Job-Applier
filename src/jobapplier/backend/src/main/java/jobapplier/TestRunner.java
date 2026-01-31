@@ -1,9 +1,9 @@
-package jobapplier.src;
+package jobapplier;
 
 import java.util.UUID;
 
-import jobapplier.src.model.*;
-import jobapplier.src.workflow.ApplicationStatus;
+import jobapplier.model.*;
+import jobapplier.workflow.ApplicationStatus;
 
 public class TestRunner {
 

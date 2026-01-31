@@ -1,4 +1,4 @@
-package jobapplier.src.model;
+package jobapplier.model;
 
 import java.util.UUID;
 

@@ -1,4 +1,4 @@
-package jobapplier.src.model;
+package jobapplier.model;
 
 import java.time.Instant;
 import java.util.UUID;

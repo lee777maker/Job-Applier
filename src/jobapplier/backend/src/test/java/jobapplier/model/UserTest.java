@@ -1,4 +1,4 @@
-package jobapplier.src.model;
+package jobapplier.model;
 
 import org.junit.jupiter.api.Test;
 import java.util.UUID;

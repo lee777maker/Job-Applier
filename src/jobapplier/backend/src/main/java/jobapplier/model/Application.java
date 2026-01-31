@@ -1,8 +1,8 @@
-package jobapplier.src.model;
+package jobapplier.model;
 
 import java.time.Instant;
 import java.util.UUID;
-import jobapplier.src.workflow.ApplicationStatus;
+import jobapplier.workflow.ApplicationStatus;
 
 public class Application {
     private final UUID id;

@@ -1,4 +1,4 @@
-package jobapplier.src.workflow;
+package jobapplier.workflow;
 
 public enum ApplicationStatus {
     DRAFT,
