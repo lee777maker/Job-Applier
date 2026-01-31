@@ -1,9 +1,10 @@
 # AI Automated Job Applier
 
-<h1 align="center">
-    <a href="Job_applier/docs/home_page.png">
-    <img src="./.github/Job_applier/docs/Home_page.png" alt="Home Page" width="900"/>
-</h1>
+<h3 align="center">Home Page</h3>
+<p align="center">
+  <img src="docs/Home_page.png" alt="Home Page" width="900" />
+</p>
+
 
 <p align="center">
   <i align="center">An AI-powereed job application assistant designed to **automnate,personalise and accelerate** the job-hunting process
@@ -15,7 +16,7 @@
     <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
   </a>
   <a href="https://www.linkedin.com/in/lethabo-neo/">
-    <img src="https://img.shields.io/badge/YOUR_LINKEDIN_URL)" alt="linkedin" style="height: 20px;">
+    <img src="https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white&link=YOUR_LINKEDIN_URL" alt="linkedin" style="height: 20px;">
   </a>
 </h4>
 
@@ -30,12 +31,11 @@ This system streamlines job applications by leveraging AI to:
   
 This happens seamlessly and intelligently, adapting as it learns more about you.
 <details open>
-<h3>Recommended Jobs</h3>
+<h3 align="center">Recommended Jobs</h3>
 <p align="center">
-  <a href="Job_applier/docs/Recommend_jobs.png">
-    <img src="./.github/Job_applier/docs/Recommend_jobs.png" alt="Recommended Jobs" width="900" />
-  </a>
+  <img src="docs/Recommend_jobs.png" alt="Recommended Jobs" width="900" />
 </p>
+
 </details>
 
 ## Current features
