@@ -12,3 +12,8 @@ node_modules/
 
 # OS
 .DS_Store
+
+# Python venv
+src/jobapplier/ai-service/.venv/
+.venv/
+venv/
