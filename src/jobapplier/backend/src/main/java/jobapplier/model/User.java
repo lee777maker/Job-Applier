@@ -33,11 +33,12 @@ public class User {
     }
 
     // If you load users from DB where passwordHash already exists
-    public static User fromHash(UUID id, String name, String surname, String email, String passwordHash) {
+        public static User fromHash(UUID id, String name, String surname, String email, String passwordHash) {
         User u = new User(id, name, surname, email, "temp-password-not-used");
         u.passwordHash = passwordHash;
         return u;
     }
+
 
     public boolean verifyPassword(String rawPassword) {
         if (rawPassword == null) return false;

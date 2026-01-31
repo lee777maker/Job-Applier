@@ -13,6 +13,15 @@ public class TestRunner {
     }
 
     public static void main(String[] args) {
+        var db = new DatabaseManager("jdbc:sqlite:jobapplier.db");
+        Schema.init(db.dataSource());
+
+        var userRepo = new UserRepositoryJdbc(db.dataSource());
+        // var jobRepo = new JobRepositoryJdbc(...)
+        // var appRepo = new ApplicationRepositoryJdbc(...)
+        // var taskRepo = new TaskRepositoryJdbc(...)
+
+        db.close();
 
         // 1) User password hashing + verification
         User user = new User(

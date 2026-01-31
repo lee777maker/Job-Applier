@@ -1,18 +1,17 @@
-import { BrowserRouter, Routes, Route } from 'react-router';
-import { Home } from './pages/Home';
-import { Profile } from './pages/Profile';
-import { Dashboard } from './pages/Dashboard';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Profile from "./pages/Profile";
+import Jobs from "./pages/Jobs";
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path ="/" element ={<Home/>}/>
-        <Route path ="/" element ={<Profile/>}/>
-        <Route path ="/jobs/:id" element ={<Dashboard/>}/>
+        <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/dashboard" element={<div style={{padding:40}}>Dashboard (next)</div>} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
-
-export default App

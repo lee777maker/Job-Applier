@@ -1,6 +1,7 @@
 package jobapplier.api;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import jobapplier.model.*;
@@ -9,6 +10,7 @@ import jobapplier.ai.AIClient;
 import jobapplier.ai.AIResult;
 import jobapplier.audit.AuditService;
 import jobapplier.workflow.ApplicationStatus;
+import jobapplier.recommendation.*;
 
 public class Manager {
 
@@ -18,6 +20,7 @@ public class Manager {
     private final TaskRepository taskRepo;
     private final AuditService auditService;
     private final AIClient aiClient;
+    private final JobRecommender jobRecommender;
 
     public Manager(
             UserRepository userRepo,
@@ -25,7 +28,8 @@ public class Manager {
             ApplicationRepository applicationRepo,
             TaskRepository taskRepo,
             AuditService auditService,
-            AIClient aiClient
+            AIClient aiClient,
+            JobRecommender jobRecommender
     ) {
         this.userRepo = userRepo;
         this.jobRepo = jobRepo;
@@ -33,6 +37,7 @@ public class Manager {
         this.taskRepo = taskRepo;
         this.auditService = auditService;
         this.aiClient = aiClient;
+        this.jobRecommender = jobRecommender;
     }
 
     /* =========================
@@ -171,4 +176,13 @@ public class Manager {
         taskRepo.update(task);
         applicationRepo.update(app);
     }
+    /* =========================
+       Job RECOMMENDATION
+       ========================= */
+
+       public List<JobRecommender.JobMatch> recommendJobsForUser(User user, int limit) {
+           List<JobRecommender.JobMatch> recommendations = jobRecommender.recommendJobs(user, limit);
+           auditService.log("JOB_RECOMMENDATIONS_GENERATED", user.getEmail(), String.valueOf(recommendations.size()));
+           return recommendations;
+       }
 }
