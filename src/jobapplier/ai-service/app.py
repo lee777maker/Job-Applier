@@ -10,7 +10,8 @@ from pydantic import BaseModel, Field
 from openai import OpenAI, AsyncOpenAI
 from sentence_transformers import SentenceTransformer
 import numpy as np
-
+import pdfminer
+import docx
 # Load environment variables from .env file (backup safety measure)
 load_dotenv()
 
@@ -19,7 +20,7 @@ app = FastAPI(title="JobApplier AI Agent")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict to your domains
+    allow_origins=["http://localhost:5173"],  # In production, restrict to your domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -305,13 +306,18 @@ async def upload_resume(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Unsupported file format")
     
     content = await file.read()
-    
-    # Simple text extraction (in production, use a proper parser)
+    text_content = ""
+
     try:
-        text_content = content.decode('utf-8')
-    except:
-        # For PDF/DOCX, you'd use a library like python-docx, pdfminer
-        text_content = "Resume content could not be extracted automatically."
+        if file.filename.endswith('.pdf'):
+            text_content = extract_text_from_pdf(content)
+        elif file.filename.endswith('.docx'):
+            text_content = extract_text_from_docx(content)
+        else:
+            text_content = content.decode('utf-8', errors='ignore')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error parsing resume: {str(e)}")
+        
     
     return {
         "filename": file.filename,
@@ -416,7 +422,37 @@ Analyze the match between the candidate and job."""
             "confidence": 0.5,
             "ats_score": None
         }
+@app.post("/agents/analyze-resume_job")
+async def analyze_resume_job(
+    job_description: str=Form(...),
+    user_id: Optional[str]=Form(None)):
+    """Analyze user's existing resume against a job description"""
 
+    try:
+        resume_text=""
+        if user_id:
+            resume_text="Resume text from database would go here"
+
+        match_req = MatchScoreRequest(
+            user_profile={"skills":[]},
+            job_description=job_description,
+            resume_text=resume_text
+        )
+        match_result = await match_score(match_req)
+        return{
+            "analysis": "Complete",
+            "match_score": match_result.match_score,
+            "ats_score": match_result.ats_score,
+            "recommendations": match_result.recommended_bullets[:5],
+            "next_steps": ["Tailor CV for better match",
+                           "Generate a cover letter",
+                           "Apply directly through platform"]
+
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing resume: {str(e)}")
+    
+                            
 def analyze_resume_changes(original: str, tailored: str) -> Dict[str, Any]:
     """Analyze changes between original and tailored resume"""
     orig_words = original.lower().split()
@@ -435,6 +471,7 @@ def analyze_resume_changes(original: str, tailored: str) -> Dict[str, Any]:
         "top_keywords_added": [w for w in added if len(w) > 5][:10]
     }
 
+
 def calculate_optimization_score(resume: str, job_description: str) -> float:
     """Calculate how optimized the resume is for the job"""
     # Extract nouns and technical terms from job description
@@ -450,6 +487,56 @@ def calculate_optimization_score(resume: str, job_description: str) -> float:
         return 0.5
     
     return min(1.0, matches / len(job_words))
+
+def extract_text_from_pdf(content: bytes) -> str:
+    """Extract text from PDF content"""
+    try:
+        from io import BytesIO
+        from pdfminer.high_level import extract_text
+
+        with BytesIO(content) as pdf_file:
+            text = extract_text(pdf_file)
+        return text
+    except ImportError:
+        print("pdfminer.six is not installed.")
+        return "PDF text extraction not available."
+    except Exception as e:
+        print(f"Error extracting PDF text: {e}")
+        return "Error extracting PDF text."
+    
+def extract_text_from_docx(content: bytes) -> str:
+    """Extract text from DOCX content"""
+    try:
+        from io import BytesIO
+        from docx import Document
+
+        with BytesIO(content) as docx_file:
+            document = Document(docx_file)
+            text = "\n".join([para.text for para in document.paragraphs])
+        return text
+    except ImportError:
+        print("python-docx is not installed.")
+        return "DOCX text extraction not available."
+    except Exception as e:
+        print(f"Error extracting DOCX text: {e}")
+        return "Error extracting DOCX text."
+    
+def clean_resume_text(text: str) -> str:
+    """Clean resume text by removing extra spaces and non-ASCII characters"""
+    if not text:
+        return ""
+    lines = text.split('\n')
+    cleaned_lines =[]
+    for line in lines:
+        line = line.strip()
+        if line:
+            cleaned_lines.append(line)
+
+    cleaned_text = '\n'.join(cleaned_lines)
+    import re
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+    return cleaned_text
+
 
 def extract_keywords_from_text(text: str, source_text: str) -> List[str]:
     """Extract keywords that appear in both texts"""

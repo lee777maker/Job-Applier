@@ -8,4 +8,3 @@ public interface TaskRepository {
     void update(Task task);
     Task findById(UUID id);
 }
-

@@ -41,4 +41,3 @@ public class Job {
 
     public void setJobUrl(String jobUrl) { this.jobUrl = jobUrl; }
 }
-

@@ -1,0 +1,197 @@
+.
+├── .DS_Store
+├── .gitignore
+├── .pids
+├── ai-service
+│   ├── __pycache__
+│   │   ├── app.cpython-311.pyc
+│   │   ├── app.cpython-313.pyc
+│   │   └── smoke_test.cpython-311-pytest-9.0.2.pyc
+│   ├── .env
+│   ├── .pytest_cache
+│   │   ├── .gitignore
+│   │   ├── CACHEDIR.TAG
+│   │   ├── README.md
+│   │   └── v
+│   │       └── cache
+│   │           └── nodeids
+│   ├── app.py
+│   ├── load_health.py
+│   ├── requirements.txt
+│   ├── run.py
+│   ├── smoke_test.py
+│   └── tests
+│       ├── __pycache__
+│       │   └── test_api.cpython-311-pytest-9.0.2.pyc
+│       └── test_api.py
+├── backend
+│   ├── .DS_Store
+│   ├── .mvn
+│   │   └── wrapper
+│   │       └── maven-wrapper.properties
+│   ├── Dockerfile
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   ├── pom.xml
+│   └── src
+│       ├── .DS_Store
+│       ├── main
+│       │   ├── .DS_Store
+│       │   ├── java
+│       │   │   ├── .DS_Store
+│       │   │   └── jobapplier
+│       │   │       ├── ai
+│       │   │       │   ├── AIClient.java
+│       │   │       │   ├── AIResult.java
+│       │   │       │   └── AIStatus.java
+│       │   │       ├── api
+│       │   │       │   ├── Manager.java
+│       │   │       │   └── rest
+│       │   │       │       ├── AIController.java
+│       │   │       │       ├── ApplicationController.java
+│       │   │       │       ├── AuthController.java
+│       │   │       │       ├── JobController.java
+│       │   │       │       └── ProfileController.java
+│       │   │       ├── audit
+│       │   │       │   └── AuditService.java
+│       │   │       ├── config
+│       │   │       │   ├── AppConfig.java
+│       │   │       │   └── SecurityConfig.java
+│       │   │       ├── JobApplierApplication.java
+│       │   │       ├── model
+│       │   │       │   ├── Application.java
+│       │   │       │   ├── Job.java
+│       │   │       │   ├── Task.java
+│       │   │       │   └── User.java
+│       │   │       ├── recommendation
+│       │   │       │   ├── JobRecommender.java
+│       │   │       │   └── JobRecommenderImpl.java
+│       │   │       ├── repository
+│       │   │       │   ├── ApplicationRepository.java
+│       │   │       │   ├── JobRepository.java
+│       │   │       │   ├── TaskRepository.java
+│       │   │       │   ├── UserRepository.java
+│       │   │       │   └── UserRepositoryJdbc.java
+│       │   │       └── workflow
+│       │   │           └── ApplicationStatus.java
+│       │   ├── recommendation
+│       │   │   ├── JobRecommender.java
+│       │   │   └── JobRecommenderImpl.java
+│       │   └── resources
+│       │       └── application.properties
+│       └── test
+│           ├── java
+│           │   └── jobapplier
+│           │       └── model
+│           │           └── UserTest.java
+│           └── UserRepositoryJdbcTest.java
+├── docker-compose.yml
+├── files.txt
+├── frontend
+│   ├── .DS_Store
+│   ├── .env
+│   ├── .env.production
+│   ├── .gitignore
+│   ├── components.json
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.cjs
+│   ├── public
+│   │   └── vite.svg
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── components
+│   │   │   ├── custom
+│   │   │   │   └── Navigation.tsx
+│   │   │   └── ui
+│   │   │       ├── accordion.tsx
+│   │   │       ├── alert-dialog.tsx
+│   │   │       ├── alert.tsx
+│   │   │       ├── aspect-ratio.tsx
+│   │   │       ├── avatar.tsx
+│   │   │       ├── badge.tsx
+│   │   │       ├── breadcrumb.tsx
+│   │   │       ├── button-group.tsx
+│   │   │       ├── button.tsx
+│   │   │       ├── calendar.tsx
+│   │   │       ├── card.tsx
+│   │   │       ├── carousel.tsx
+│   │   │       ├── chart.tsx
+│   │   │       ├── checkbox.tsx
+│   │   │       ├── collapsible.tsx
+│   │   │       ├── command.tsx
+│   │   │       ├── context-menu.tsx
+│   │   │       ├── dialog.tsx
+│   │   │       ├── drawer.tsx
+│   │   │       ├── dropdown-menu.tsx
+│   │   │       ├── empty.tsx
+│   │   │       ├── field.tsx
+│   │   │       ├── form.tsx
+│   │   │       ├── hover-card.tsx
+│   │   │       ├── input-group.tsx
+│   │   │       ├── input-otp.tsx
+│   │   │       ├── input.tsx
+│   │   │       ├── item.tsx
+│   │   │       ├── kbd.tsx
+│   │   │       ├── label.tsx
+│   │   │       ├── menubar.tsx
+│   │   │       ├── navigation-menu.tsx
+│   │   │       ├── pagination.tsx
+│   │   │       ├── popover.tsx
+│   │   │       ├── progress.tsx
+│   │   │       ├── radio-group.tsx
+│   │   │       ├── resizable.tsx
+│   │   │       ├── scroll-area.tsx
+│   │   │       ├── select.tsx
+│   │   │       ├── separator.tsx
+│   │   │       ├── sheet.tsx
+│   │   │       ├── sidebar.tsx
+│   │   │       ├── skeleton.tsx
+│   │   │       ├── slider.tsx
+│   │   │       ├── sonner.tsx
+│   │   │       ├── spinner.tsx
+│   │   │       ├── switch.tsx
+│   │   │       ├── table.tsx
+│   │   │       ├── tabs.tsx
+│   │   │       ├── textarea.tsx
+│   │   │       ├── toggle-group.tsx
+│   │   │       ├── toggle.tsx
+│   │   │       └── tooltip.tsx
+│   │   ├── context
+│   │   │   └── AppContext.tsx
+│   │   ├── hooks
+│   │   │   └── use-mobile.ts
+│   │   ├── index.css
+│   │   ├── lib
+│   │   │   └── utils.ts
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── HomePage.tsx
+│   │   │   ├── JobsPage.tsx
+│   │   │   └── ProfilePage.tsx
+│   │   ├── tests
+│   │   │   ├── context
+│   │   │   │   └── AppContext.test.tsx
+│   │   │   └── pages
+│   │   │       └── HomePage.test.tsx
+│   │   └── types
+│   │       └── index.ts
+│   ├── tailwind.config.cjs
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── logs
+│   ├── ai-service.log
+│   ├── backend.log
+│   └── frontend.log
+└── start.sh
+
+46 directories, 149 files

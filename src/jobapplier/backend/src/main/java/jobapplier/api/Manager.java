@@ -96,7 +96,7 @@ public class Manager {
        ========================= */
 
     public Task generateCoverLetter(User user, Application app) {
-        Task task = new Task(UUID.randomUUID(), app.getId(), TaskType.COVER_LETTER, TaskStatus.RUNNING);
+        Task task = new Task(UUID.randomUUID(), app.getId(), Task.TaskType.COVER_LETTER, Task.TaskStatus.RUNNING);
         taskRepo.save(task);
 
         AIResult result = aiClient.generateCoverLetter(app.getId());
@@ -106,7 +106,7 @@ public class Manager {
     }
 
     public Task generateResume(User user, Application app) {
-        Task task = new Task(UUID.randomUUID(), app.getId(), TaskType.RESUME, TaskStatus.RUNNING);
+        Task task = new Task(UUID.randomUUID(), app.getId(), Task.TaskType.RESUME, Task.TaskStatus.RUNNING);
         taskRepo.save(task);
 
         AIResult result = aiClient.generateResume(app.getId());
@@ -158,16 +158,16 @@ public class Manager {
     private void handleAIResult(User user, Application app, Task task, AIResult result) {
         switch (result.status()) {
             case SUCCESS -> {
-                task.setStatus(TaskStatus.SUCCESS);
+                task.setStatus(Task.TaskStatus.SUCCESS);
                 auditService.log("AI_TASK_SUCCESS", task.getId().toString());
             }
             case PARTIAL -> {
-                task.setStatus(TaskStatus.PARTIAL);
+                task.setStatus(Task.TaskStatus.PARTIAL);
                 app.setStatus(ApplicationStatus.PARTIAL_ACTION_REQUIRED);
                 auditService.log("AI_TASK_PARTIAL", task.getId().toString());
             }
-            case FAILED -> {
-                task.setStatus(TaskStatus.FAILED);
+            case FAILURE -> {
+                task.setStatus(Task.TaskStatus.FAILED);
                 app.setStatus(ApplicationStatus.FAILED_NOT_SUBMITTED);
                 auditService.log("AI_TASK_FAILED", task.getId().toString());
             }

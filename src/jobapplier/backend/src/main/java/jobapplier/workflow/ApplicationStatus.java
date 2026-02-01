@@ -2,13 +2,8 @@ package jobapplier.workflow;
 
 public enum ApplicationStatus {
     DRAFT,
-    READY_TO_SUBMIT,
+    READY,
     SUBMITTED,
     PARTIAL_ACTION_REQUIRED,
-    FAILED_NOT_SUBMITTED,
-    AWAITING_RESPONSE,
-    SHORTLISTED,
-    REJECTED,
-    OFFER
+    FAILED_NOT_SUBMITTED
 }
-
