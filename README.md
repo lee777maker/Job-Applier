@@ -2,7 +2,8 @@
 <p align="center">
   <img src="docs/Dashboard.png" alt="Recommended Jobs" width="900" />
 </p>
-# JobApplier AI
+
+## JobApplier AI
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" alt="React">
