@@ -269,7 +269,7 @@ docker-compose up --build
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and development process.
+Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for more details.
 
 ## Roadmap
 
