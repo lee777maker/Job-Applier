@@ -1,5 +1,7 @@
 # AI Automated Job Applier
-
+<p align="center">
+  <img src="docs/Dashboard.png" alt="Recommended Jobs" width="900" />
+</p>
 # JobApplier AI
 
 <p align="center">
@@ -36,11 +38,12 @@ This system streamlines job applications by leveraging AI to:
   
 This happens seamlessly and intelligently, adapting as it learns more about you.
 <details open>
-<h3 align="center">Recommended Jobs</h3>
 <p align="center">
-  <img src="docs/Recommend_jobs.png" alt="Recommended Jobs" width="900" />
+  <img src="docs/Profile.png" alt="Recommended Jobs" width="900" />
 </p>
-
+<p align="center">
+  <img src="docs/Jobs.png" alt="Recommended Jobs" width="900" />
+</p>
 </details>
 
 ## Features
