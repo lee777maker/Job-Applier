@@ -1,284 +1,176 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { 
-  UserProfile, 
-  ContactInfo, 
-  Experience, 
-  Education, 
-  Project, 
-  Skill, 
-  Certification,
-  Job, 
-  ChatMessage,
-  Page 
-} from '@/types';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import type { User, UserProfile, JobPreferences, Job, ChatMessage } from '@/types';
 
 interface AppState {
-  currentPage: Page;
-  setCurrentPage: (page: Page) => void;
-  profile: UserProfile;
-  updateProfile: (profile: UserProfile) => void;
-  updateContactInfo: (contactInfo: ContactInfo) => void;
-  addExperience: (experience: Experience) => void;
-  updateExperience: (id: string, experience: Experience) => void;
-  removeExperience: (id: string) => void;
-  addEducation: (education: Education) => void;
-  updateEducation: (id: string, education: Education) => void;
-  removeEducation: (id: string) => void;
-  addProject: (project: Project) => void;
-  updateProject: (id: string, project: Project) => void;
-  removeProject: (id: string) => void;
-  addSkill: (skill: Skill) => void;
-  removeSkill: (id: string) => void;
-  addCertification: (certification: Certification) => void;
-  removeCertification: (id: string) => void;
-  jobs: Job[];
+  // Auth
+  user: User | null;
+  isAuthenticated: boolean;
+  
+  // Profile
+  profile: UserProfile | null;
+  
+  // Job Preferences
+  jobPreferences: JobPreferences | null;
+  
+  // Jobs
+  recommendedJobs: Job[];
+  
+  // Chat
   chatMessages: ChatMessage[];
-  addChatMessage: (message: ChatMessage) => void;
-  isProfileEditing: boolean;
-  setIsProfileEditing: (editing: boolean) => void;
-  resumeText?: string;
-  setResumeText?: (text: string) => void;
-  jobDescription?: string;
-  setJobDescription?: (description: string) => void;
+  
+  // CV Upload
+  uploadedCV: File | null;
+  extractedCVData: any | null;
 }
 
-const defaultProfile: UserProfile = {
-  contactInfo: {
-    firstName: 'Lethabo',
-    lastName: 'Neo',
-    email: 'lethaboneo@icloud.com',
-    phoneNumber: '0814476357'
-  },
-  experience: [
+interface AppContextType extends AppState {
+  // Auth actions
+  login: (user: User) => void;
+  logout: () => void;
+  
+  // Profile actions
+  setProfile: (profile: UserProfile) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
+  
+  // Job Preferences actions
+  setJobPreferences: (prefs: JobPreferences) => void;
+  
+  // Jobs actions
+  setRecommendedJobs: (jobs: Job[]) => void;
+  
+  // Chat actions
+  addChatMessage: (message: ChatMessage) => void;
+  clearChat: () => void;
+  
+  // CV actions
+  setUploadedCV: (file: File | null) => void;
+  setExtractedCVData: (data: any) => void;
+}
+
+const defaultState: AppState = {
+  user: null,
+  isAuthenticated: false,
+  profile: null,
+  jobPreferences: null,
+  recommendedJobs: [],
+  chatMessages: [
     {
-      id: '1',
-      title: 'Junior Software Engineer',
-      company: 'Tech Corp',
-      duration: '1 year',
-      description: 'Designed and built an end-to-end system that automatically sources job listings, tailors CVs, generates cover letters, and contacts recruiters via email and LinkedIn.'
-    },
-    {
-      id: '2',
-      title: 'BusBoy',
-      company: 'Restaurant Group',
-      duration: '1 year',
-      description: 'Designed and built an end-to-end system that automatically sources job listings, tailors CVs, generates cover letters, and contacts recruiters via email and LinkedIn.'
+      role: 'assistant',
+      content: 'Hi, I am your personal assistant\n\nTask I can assist you with:\n1. Find jobs where you are top candidate\n2. Assist with interview questions\n3. Provide insights on specific jobs\n4. Help with app navigation',
+      timestamp: Date.now()
     }
   ],
-  education: [
-    {
-      id: '1',
-      degree: 'Bachelors of Science',
-      field: 'Computer Science and Applied Statistics',
-      institution: 'University of Cape Town',
-      gpa: '4.0'
-    },
-    {
-      id: '2',
-      degree: 'Bachelors of Science Honours',
-      field: 'Computer Science',
-      institution: 'University of Cape Town',
-      gpa: '4.0'
-    }
-  ],
-  projects: [
-    {
-      id: '1',
-      name: 'UAV Visualisation App',
-      description: 'Designed and built an end-to-end system that automatically sources job listings, tailors CVs, generates cover letters, and contacts recruiters via email and LinkedIn.'
-    },
-    {
-      id: '2',
-      name: 'AI Job Application App',
-      description: 'Designed and built an end-to-end system that automatically sources job listings, tailors CVs, generates cover letters, and contacts recruiters via email and LinkedIn.'
-    }
-  ],
-  skills: [
-    { id: '1', name: 'Adaptable' },
-    { id: '2', name: 'Adaptable' },
-    { id: '3', name: 'Adaptable' },
-    { id: '4', name: 'Adaptable' },
-    { id: '5', name: 'Adaptable' },
-    { id: '6', name: 'Adaptable' }
-  ],
-  certifications: [
-    { id: '1', name: 'AWS Cloud Practitioner', link: '#' },
-    { id: '2', name: 'Driver\'s License', link: '#' }
-  ]
+  uploadedCV: null,
+  extractedCVData: null,
 };
 
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Graduate Software Engineer',
-    company: 'BT',
-    applicationUrl: 'https://linkedin.com/jobs/1'
-  },
-  {
-    id: '2',
-    title: 'Agentic Engineer',
-    company: 'Deloitte',
-    applicationUrl: 'https://linkedin.com/jobs/2'
-  },
-  {
-    id: '3',
-    title: 'Junior Automation Engineer',
-    company: 'Lectra',
-    applicationUrl: 'https://linkedin.com/jobs/3'
-  },
-  {
-    id: '4',
-    title: 'Graduate Software Engineer',
-    company: 'BT',
-    applicationUrl: 'https://linkedin.com/jobs/4'
-  },
-  {
-    id: '5',
-    title: 'Agentic Engineer',
-    company: 'Deloitte',
-    applicationUrl: 'https://linkedin.com/jobs/5'
-  },
-  {
-    id: '6',
-    title: 'Junior Automation Engineer',
-    company: 'Lectra',
-    applicationUrl: 'https://linkedin.com/jobs/6'
-  }
-];
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const AppContext = createContext<AppState | undefined>(undefined);
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<AppState>(defaultState);
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
-  const [jobs] = useState<Job[]>(mockJobs);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [isProfileEditing, setIsProfileEditing] = useState(false);
-
-  const updateProfile = useCallback((newProfile: UserProfile) => {
-    setProfile(newProfile);
+  // Load state from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('jobapplier_state');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setState(prev => ({
+          ...prev,
+          ...parsed,
+          // Don't restore file objects
+          uploadedCV: null,
+        }));
+      } catch (e) {
+        console.error('Failed to parse saved state:', e);
+      }
+    }
   }, []);
 
-  const updateContactInfo = useCallback((contactInfo: ContactInfo) => {
-    setProfile(prev => ({ ...prev, contactInfo }));
-  }, []);
+  // Save state to localStorage on changes (excluding file objects)
+  useEffect(() => {
+    const stateToSave = {
+      user: state.user,
+      isAuthenticated: state.isAuthenticated,
+      profile: state.profile,
+      jobPreferences: state.jobPreferences,
+      recommendedJobs: state.recommendedJobs,
+      chatMessages: state.chatMessages,
+      extractedCVData: state.extractedCVData,
+    };
+    localStorage.setItem('jobapplier_state', JSON.stringify(stateToSave));
+  }, [state.user, state.isAuthenticated, state.profile, state.jobPreferences, state.recommendedJobs, state.chatMessages, state.extractedCVData]);
 
-  const addExperience = useCallback((experience: Experience) => {
-    setProfile(prev => ({ ...prev, experience: [...prev.experience, experience] }));
-  }, []);
-
-  const updateExperience = useCallback((id: string, experience: Experience) => {
-    setProfile(prev => ({
+  const login = (user: User) => {
+    setState(prev => ({
       ...prev,
-      experience: prev.experience.map(e => e.id === id ? experience : e)
+      user,
+      isAuthenticated: true,
     }));
-  }, []);
+  };
 
-  const removeExperience = useCallback((id: string) => {
-    setProfile(prev => ({
+  const logout = () => {
+    localStorage.removeItem('jobapplier_state');
+    setState(defaultState);
+  };
+
+  const setProfile = (profile: UserProfile) => {
+    setState(prev => ({ ...prev, profile }));
+  };
+
+  const updateProfile = (updates: Partial<UserProfile>) => {
+    setState(prev => ({
       ...prev,
-      experience: prev.experience.filter(e => e.id !== id)
+      profile: prev.profile ? { ...prev.profile, ...updates } : null,
     }));
-  }, []);
+  };
 
-  const addEducation = useCallback((education: Education) => {
-    setProfile(prev => ({ ...prev, education: [...prev.education, education] }));
-  }, []);
+  const setJobPreferences = (prefs: JobPreferences) => {
+    setState(prev => ({ ...prev, jobPreferences: prefs }));
+  };
 
-  const updateEducation = useCallback((id: string, education: Education) => {
-    setProfile(prev => ({
+  const setRecommendedJobs = (jobs: Job[]) => {
+    setState(prev => ({ ...prev, recommendedJobs: jobs }));
+  };
+
+  const addChatMessage = (message: ChatMessage) => {
+    setState(prev => ({
       ...prev,
-      education: prev.education.map(e => e.id === id ? education : e)
+      chatMessages: [...prev.chatMessages, { ...message, timestamp: Date.now() }],
     }));
-  }, []);
+  };
 
-  const removeEducation = useCallback((id: string) => {
-    setProfile(prev => ({
+  const clearChat = () => {
+    setState(prev => ({
       ...prev,
-      education: prev.education.filter(e => e.id !== id)
+      chatMessages: defaultState.chatMessages,
     }));
-  }, []);
+  };
 
-  const addProject = useCallback((project: Project) => {
-    setProfile(prev => ({ ...prev, projects: [...prev.projects, project] }));
-  }, []);
+  const setUploadedCV = (file: File | null) => {
+    setState(prev => ({ ...prev, uploadedCV: file }));
+  };
 
-  const updateProject = useCallback((id: string, project: Project) => {
-    setProfile(prev => ({
-      ...prev,
-      projects: prev.projects.map(p => p.id === id ? project : p)
-    }));
-  }, []);
-
-  const removeProject = useCallback((id: string) => {
-    setProfile(prev => ({
-      ...prev,
-      projects: prev.projects.filter(p => p.id !== id)
-    }));
-  }, []);
-
-  const addSkill = useCallback((skill: Skill) => {
-    setProfile(prev => ({ ...prev, skills: [...prev.skills, skill] }));
-  }, []);
-
-  const removeSkill = useCallback((id: string) => {
-    setProfile(prev => ({
-      ...prev,
-      skills: prev.skills.filter(s => s.id !== id)
-    }));
-  }, []);
-
-  const addCertification = useCallback((certification: Certification) => {
-    setProfile(prev => ({ 
-      ...prev, 
-      certifications: [...prev.certifications, certification] 
-    }));
-  }, []);
-
-  const removeCertification = useCallback((id: string) => {
-    setProfile(prev => ({
-      ...prev,
-      certifications: prev.certifications.filter(c => c.id !== id)
-    }));
-  }, []);
-
-  const addChatMessage = useCallback((message: ChatMessage) => {
-    setChatMessages(prev => [...prev, message]);
-  }, []);
-  const [resumeText, setResumeText] = useState<string>('');
-  const [jobDescription, setJobDescription] = useState<string>('');
-  const value: AppState = {
-    currentPage,
-    setCurrentPage,
-    profile,
-    updateProfile,
-    updateContactInfo,
-    addExperience,
-    updateExperience,
-    removeExperience,
-    addEducation,
-    updateEducation,
-    removeEducation,
-    addProject,
-    updateProject,
-    removeProject,
-    addSkill,
-    removeSkill,
-    addCertification,
-    removeCertification,
-    jobs,
-    chatMessages,
-    addChatMessage,
-    isProfileEditing,
-    setIsProfileEditing,
-    resumeText,
-    setResumeText,
-    jobDescription,
-    setJobDescription
+  const setExtractedCVData = (data: any) => {
+    setState(prev => ({ ...prev, extractedCVData: data }));
   };
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider
+      value={{
+        ...state,
+        login,
+        logout,
+        setProfile,
+        updateProfile,
+        setJobPreferences,
+        setRecommendedJobs,
+        addChatMessage,
+        clearChat,
+        setUploadedCV,
+        setExtractedCVData,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

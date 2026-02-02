@@ -1,4 +1,11 @@
-// User Profile Types
+// User Types
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  surname: string;
+}
+
 export interface ContactInfo {
   firstName: string;
   lastName: string;
@@ -28,24 +35,22 @@ export interface Project {
   description: string;
 }
 
-export interface Skill {
-  id: string;
-  name: string;
-}
-
 export interface Certification {
   id: string;
   name: string;
-  link?: string;
+  link: string;
 }
 
 export interface UserProfile {
+  id: string;
   contactInfo: ContactInfo;
   experience: Experience[];
   education: Education[];
+  skills: string[];
   projects: Project[];
-  skills: Skill[];
   certifications: Certification[];
+  resumeUrl?: string;
+  resumeText?: string;
 }
 
 // Job Types
@@ -53,50 +58,64 @@ export interface Job {
   id: string;
   title: string;
   company: string;
-  location?: string;
+  location: string;
   applicationUrl: string;
+  matchScore: number;
   description?: string;
-  postedDate?: string;
 }
 
-// Chat Types
-export interface ChatMessage {
+export interface JobPreferences {
+  preferredRole: string;
+  contractTypes: string[];
+  location: string;
+  openToRemote: boolean;
+}
+
+// Application Types
+export interface Application {
   id: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  status: 'DRAFT' | 'SUBMITTED' | 'PARTIAL_ACTION_REQUIRED' | 'FAILED_NOT_SUBMITTED';
+  createdAt: string;
+}
+
+// AI Types
+export interface MatchScoreResult {
+  match_score: number;
+  ats_score: number;
+  strengths: string[];
+  gaps: string[];
+  keywords_to_add: string[];
+  recommended_bullets: string[];
+  confidence: number;
+}
+
+export interface TailoredResume {
+  tailored_resume: string;
+  changes_made: {
+    words_added: number;
+    words_removed: number;
+    length_change_percent: number;
+    top_keywords_added: string[];
+  };
+  optimization_score: number;
+}
+
+export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
-  attachments?: Attachment[];
+  timestamp?: number;
 }
 
-export interface UserState {
-  hasUploadedResume: boolean;
-  resumeId?: string;
-  currentJobDescription?: string;
-  aiContext?: 'ats_score' | 'tailor_resume' | 'cover_letter' | 'general';
+// CV Extracted Data
+export interface CVExtractedData {
+  contactInfo: ContactInfo;
+  experience: Experience[];
+  education: Education[];
+  skills: string[];
+  projects: Project[];
+  certifications: Certification[];
+  rawText: string;
 }
-
-export interface AIRequest {
-  type: 'upload_resume' | 'analyze_job' | 'tailor_resume' | 'cover_letter';
-  data: any;
-}
-
-export interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  url?: string;
-}
-
-// Navigation Types
-export type Page = 'home' | 'profile' | 'dashboard' | 'jobs';
-
-// File Upload Types
-export type SupportedFileType = 'application/json' | 'image/png' | 'image/jpeg' | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-
-export const SUPPORTED_FILE_TYPES: Record<string, string[]> = {
-  'application/json': ['.json'],
-  'image/png': ['.png'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
-};

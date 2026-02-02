@@ -1,185 +1,296 @@
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
+import Navigation from '@/components/custom/Navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Briefcase, 
-  FileText, 
-  MessageSquare, 
-  TrendingUp,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertCircle
+  Send, 
+  ArrowUpRight, 
+  Sparkles, 
+  Loader2,
+  MapPin,
+  Building2,
+  TrendingUp
 } from 'lucide-react';
+import { toast } from 'sonner';
+import type { Job, ChatMessage } from '@/types';
 
-export function DashboardPage() {
-  const { profile, chatMessages } = useApp();
+// Mock job data for demo
+const mockJobs: Job[] = [
+  {
+    id: '1',
+    title: 'Graduate Software Engineer',
+    company: 'EY',
+    location: 'Johannesburg, South Africa',
+    applicationUrl: 'https://careers.ey.com',
+    matchScore: 0.92,
+    description: 'Join our technology team and work on cutting-edge projects...',
+  },
+  {
+    id: '2',
+    title: 'Agentic Engineer',
+    company: 'Deloitte',
+    location: 'Johannesburg, South Africa',
+    applicationUrl: 'https://careers.deloitte.com',
+    matchScore: 0.88,
+    description: 'Build intelligent AI agents and automation systems...',
+  },
+  {
+    id: '3',
+    title: 'Junior Automation Engineer',
+    company: 'Lectra',
+    location: 'Paris, France (Remote)',
+    applicationUrl: 'https://careers.lectra.com',
+    matchScore: 0.85,
+    description: 'Automate manufacturing processes and workflows...',
+  },
+  {
+    id: '4',
+    title: 'Full Stack Developer',
+    company: 'Google',
+    location: 'Mountain View, CA (Remote)',
+    applicationUrl: 'https://careers.google.com',
+    matchScore: 0.83,
+    description: 'Build scalable web applications...',
+  },
+];
 
-  const stats = [
-    { 
-      label: 'Profile Completion', 
-      value: '85%', 
-      icon: <FileText className="w-5 h-5" />,
-      color: 'text-[#f5c518]'
-    },
-    { 
-      label: 'Jobs Applied', 
-      value: '12', 
-      icon: <Briefcase className="w-5 h-5" />,
-      color: 'text-green-500'
-    },
-    { 
-      label: 'AI Conversations', 
-      value: chatMessages.length.toString(), 
-      icon: <MessageSquare className="w-5 h-5" />,
-      color: 'text-blue-500'
-    },
-    { 
-      label: 'Match Score', 
-      value: '92%', 
-      icon: <TrendingUp className="w-5 h-5" />,
-      color: 'text-purple-500'
+export default function DashboardPage() {
+  const { user, jobPreferences, chatMessages, addChatMessage, setRecommendedJobs } = useApp();
+  const [jobs, setJobs] = useState<Job[]>(mockJobs);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isJobsLoading, setIsJobsLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch job recommendations on mount
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  const fetchJobs = async () => {
+    setIsJobsLoading(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setJobs(mockJobs);
+      setRecommendedJobs(mockJobs);
+    } catch (error: any) {
+      toast.error('Failed to load job recommendations');
+    } finally {
+      setIsJobsLoading(false);
     }
-  ];
+  };
 
-  const recentActivity = [
-    { 
-      type: 'application', 
-      title: 'Applied to Graduate Software Engineer at BT',
-      time: '2 hours ago',
-      icon: <CheckCircle2 className="w-4 h-4 text-green-500" />
-    },
-    { 
-      type: 'profile', 
-      title: 'Updated profile skills section',
-      time: '1 day ago',
-      icon: <FileText className="w-4 h-4 text-blue-500" />
-    },
-    { 
-      type: 'chat', 
-      title: 'Asked AI about resume optimization',
-      time: '2 days ago',
-      icon: <MessageSquare className="w-4 h-4 text-[#f5c518]" />
-    },
-    { 
-      type: 'job', 
-      title: 'New job match: Agentic Engineer at Deloitte',
-      time: '3 days ago',
-      icon: <AlertCircle className="w-4 h-4 text-purple-500" />
-    }
-  ];
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
 
-  const upcomingEvents = [
-    { 
-      title: 'Technical Interview - BT',
-      date: 'Feb 5, 2026',
-      time: '10:00 AM',
-      type: 'interview'
-    },
-    { 
-      title: 'Resume Review Session',
-      date: 'Feb 8, 2026',
-      time: '2:00 PM',
-      type: 'meeting'
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: chatInput.trim(),
+    };
+
+    addChatMessage(userMessage);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      // Simulate API delay and response
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      let response = '';
+      const lowerMsg = userMessage.content.toLowerCase();
+      
+      if (lowerMsg.includes('job') || lowerMsg.includes('position')) {
+        response = `I found ${jobs.length} jobs matching your profile! The top match is "${jobs[0].title}" at ${jobs[0].company} with a ${Math.round(jobs[0].matchScore * 100)}% match score. Would you like me to help you apply for this position?`;
+      } else if (lowerMsg.includes('interview')) {
+        response = 'I can help you prepare for interviews! Here are some tips:\n\n1. Research the company thoroughly\n2. Practice the STAR method for behavioral questions\n3. Prepare questions to ask the interviewer\n4. Review the job description and align your experience\n\nWould you like me to simulate a mock interview?';
+      } else if (lowerMsg.includes('resume') || lowerMsg.includes('cv')) {
+        response = 'I can help optimize your resume! Go to the Dashboard tab to:\n\n- Get ATS scores\n- Tailor your resume for specific jobs\n- See improvement suggestions\n\nWould you like me to analyze a specific job description against your profile?';
+      } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
+        response = `Hello ${user?.name || 'there'}! I'm Neilwe, your AI career assistant. I can help you:\n\n- Find jobs where you're a top candidate\n- Prepare for interviews\n- Optimize your resume\n- Navigate the platform\n\nWhat would you like help with today?`;
+      } else {
+        response = 'I understand! I can help you with various career-related tasks. Feel free to ask me about:\n\n- Job recommendations\n- Interview preparation\n- Resume optimization\n- Career advice\n- Specific companies or roles\n\nWhat would you like to know?';
+      }
+
+      addChatMessage({
+        role: 'assistant',
+        content: response,
+      });
+    } catch (error: any) {
+      toast.error('Failed to get response from Neilwe');
+    } finally {
+      setIsChatLoading(false);
     }
-  ];
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#0f0f0f] py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-400">
-            Welcome back, {profile.contactInfo.firstName}! Here's your job search overview.
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, index) => (
-            <div 
-              key={index}
-              className="bg-[#1a1a1a] rounded-lg p-5 border border-[#2a2a2a]"
-            >
-              <div className={`${stat.color} mb-2`}>{stat.icon}</div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-gray-500 text-sm">{stat.label}</p>
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Job Recommendations */}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                Top jobs based on your profile
+              </h1>
+              <p className="text-muted-foreground">
+                {jobPreferences?.preferredRole && `Showing ${jobPreferences.preferredRole} positions`}
+              </p>
             </div>
-          ))}
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity */}
-          <div className="bg-[#1a1a1a] rounded-lg p-6 border border-[#2a2a2a]">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-[#f5c518]" />
-              Recent Activity
-            </h2>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div 
-                  key={index}
-                  className="flex items-start gap-3 p-3 bg-[#2a2a2a] rounded-lg"
-                >
-                  <div className="mt-0.5">{activity.icon}</div>
-                  <div className="flex-1">
-                    <p className="text-white text-sm">{activity.title}</p>
-                    <p className="text-gray-500 text-xs mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {isJobsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {jobs.map((job, index) => (
+                  <Card
+                    key={job.id}
+                    className="job-card animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold mb-1">
+                            {job.title}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Building2 className="w-4 h-4" />
+                              {job.company}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {job.location}
+                            </span>
+                          </div>
+                          
+                          {/* Match Score */}
+                          <div className="flex items-center gap-2 mt-3">
+                            <div className="flex items-center gap-1">
+                              <TrendingUp className="w-4 h-4 text-primary" />
+                              <span className="text-sm font-medium">
+                                {Math.round(job.matchScore * 100)}% Match
+                              </span>
+                            </div>
+                            <div className="flex-1 max-w-24 h-2 bg-secondary rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full"
+                                style={{ width: `${job.matchScore * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Apply Button */}
+                        <a
+                          href={job.applicationUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
+                        >
+                          <ArrowUpRight className="w-5 h-5 text-primary-foreground" />
+                        </a>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Upcoming Events */}
-          <div className="bg-[#1a1a1a] rounded-lg p-6 border border-[#2a2a2a]">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#f5c518]" />
-              Upcoming Events
-            </h2>
-            <div className="space-y-4">
-              {upcomingEvents.map((event, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-lg"
-                >
+          {/* Right Column - Neilwe Chatbot */}
+          <div className="lg:col-span-1">
+            <Card className="bg-card border-border h-[calc(100vh-12rem)] flex flex-col">
+              <CardContent className="p-4 flex flex-col h-full">
+                {/* Chat Header */}
+                <div className="flex items-center gap-3 pb-4 border-b border-border">
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-white font-medium">{event.title}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span className="text-gray-400 text-sm flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {event.date}
-                      </span>
-                      <span className="text-gray-500 text-sm flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {event.time}
-                      </span>
-                    </div>
+                    <h3 className="font-semibold">Neilwe</h3>
+                    <p className="text-xs text-muted-foreground">Your AI assistant</p>
                   </div>
-                  <div className={`w-3 h-3 rounded-full ${
-                    event.type === 'interview' ? 'bg-[#f5c518]' : 'bg-blue-500'
-                  }`} />
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 bg-[#1a1a1a] rounded-lg p-6 border border-[#2a2a2a]">
-          <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <button className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg text-sm transition-colors">
-              Update Resume
-            </button>
-            <button className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg text-sm transition-colors">
-              Browse Jobs
-            </button>
-            <button className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg text-sm transition-colors">
-              Ask AI Assistant
-            </button>
-            <button className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg text-sm transition-colors">
-              View Applications
-            </button>
+                {/* Chat Messages */}
+                <ScrollArea className="flex-1 py-4">
+                  <div className="space-y-4">
+                    {chatMessages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${
+                          message.role === 'user' ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[85%] whitespace-pre-wrap ${
+                            message.role === 'user'
+                              ? 'chat-message-user'
+                              : 'chat-message-assistant'
+                          }`}
+                        >
+                          {message.content}
+                        </div>
+                      </div>
+                    ))}
+                    {isChatLoading && (
+                      <div className="flex justify-start">
+                        <div className="chat-message-assistant flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {/* Chat Input */}
+                <div className="pt-4 border-t border-border">
+                  <div className="relative">
+                    <Input
+                      placeholder="What would you like to know?"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      className="input-dark pr-12"
+                      disabled={isChatLoading}
+                    />
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={!chatInput.trim() || isChatLoading}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 p-0 bg-primary hover:bg-primary/90 rounded-lg"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

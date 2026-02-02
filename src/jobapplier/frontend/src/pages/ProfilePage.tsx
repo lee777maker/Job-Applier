@@ -1,737 +1,340 @@
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import Navigation from '@/components/custom/Navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Edit2, 
-  Save, 
-  X, 
-  Plus, 
-  Trash2, 
-  ExternalLink,
-  GraduationCap,
-  Briefcase,
+  Pencil, 
+  FileText, 
+  Briefcase, 
+  GraduationCap, 
   Folder,
   Award,
-  User,
-  Mail,
-  Phone,
-  Sparkles
+  Wrench,
+  ExternalLink,
+  Save,
+  X
 } from 'lucide-react';
-import type { Experience, Education, Project, Skill, Certification } from '@/types';
+import { toast } from 'sonner';
 
-export function ProfilePage() {
-  const { 
-    profile, 
-    isProfileEditing, 
-    setIsProfileEditing,
-    updateContactInfo,
-    addExperience,
-    updateExperience,
-    removeExperience,
-    addEducation,
-    updateEducation,
-    removeEducation,
-    addProject,
-    updateProject,
-    removeProject,
-    addSkill,
-    removeSkill,
-    addCertification,
-    removeCertification
-  } = useApp();
+export default function ProfilePage() {
+  const { profile, user, setProfile } = useApp();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState(profile);
 
-  const [editingContact, setEditingContact] = useState(false);
-  const [contactForm, setContactForm] = useState(profile.contactInfo);
-
-  const handleSaveContact = () => {
-    updateContactInfo(contactForm);
-    setEditingContact(false);
+  const handleSave = () => {
+    if (editedProfile) {
+      setProfile(editedProfile);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    }
   };
 
+  const handleCancel = () => {
+    setEditedProfile(profile);
+    setIsEditing(false);
+  };
+
+  const updateContactInfo = (field: string, value: string) => {
+    setEditedProfile(prev => prev ? {
+      ...prev,
+      contactInfo: {
+        ...prev.contactInfo,
+        [field]: value
+      }
+    } : null);
+  };
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+          <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">No Profile Found</h2>
+          <p className="text-muted-foreground mb-6">
+            Please upload your CV to create your profile
+          </p>
+          <Button onClick={() => window.location.href = '/upload-cv'} className="btn-primary">
+            Upload CV
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#0f0f0f] py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-white">Candidate</h1>
-          <Button
-            onClick={() => setIsProfileEditing(!isProfileEditing)}
-            className={`${
-              isProfileEditing 
-                ? 'bg-gray-600 hover:bg-gray-700' 
-                : 'bg-[#f5c518] hover:bg-[#e6b800] text-black'
-            }`}
-          >
-            {isProfileEditing ? (
+          <div className="text-center flex-1">
+            <h1 className="text-3xl font-bold mb-2">Candidate</h1>
+            <p className="text-muted-foreground">
+              {user?.name} {user?.surname}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {isEditing ? (
               <>
-                <X className="w-4 h-4 mr-2" />
-                Cancel
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancel}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  className="bg-primary text-primary-foreground"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save
+                </Button>
               </>
             ) : (
-              <>
-                <Edit2 className="w-4 h-4 mr-2" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
                 Edit
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Contact Info Section */}
-        <Section title="Contact Info" icon={<User className="w-5 h-5" />}>
-          <div className="flex justify-end mb-4">
-            {isProfileEditing && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (editingContact) {
-                    handleSaveContact();
-                  } else {
-                    setEditingContact(true);
-                    setContactForm(profile.contactInfo);
-                  }
-                }}
-                className="text-[#f5c518] hover:text-[#e6b800]"
-              >
-                {editingContact ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
               </Button>
             )}
           </div>
-          
-          {editingContact ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-400">First Name</Label>
-                <Input
-                  value={contactForm.firstName}
-                  onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })}
-                  className="bg-[#2a2a2a] border-[#3a3a3a] text-white"
-                />
+        </div>
+
+        <ScrollArea className="h-[calc(100vh-12rem)]">
+          <div className="space-y-8">
+            {/* Contact Info */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-primary rounded-full" />
+                Contact Info
+              </h2>
+              <Card className="bg-card border-border">
+                <CardContent className="p-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">First Name</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.contactInfo.firstName || ''}
+                          onChange={(e) => updateContactInfo('firstName', e.target.value)}
+                          className="input-dark"
+                        />
+                      ) : (
+                        <p className="font-medium">{profile.contactInfo.firstName}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">Last Name</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.contactInfo.lastName || ''}
+                          onChange={(e) => updateContactInfo('lastName', e.target.value)}
+                          className="input-dark"
+                        />
+                      ) : (
+                        <p className="font-medium">{profile.contactInfo.lastName}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">Email</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.contactInfo.email || ''}
+                          onChange={(e) => updateContactInfo('email', e.target.value)}
+                          className="input-dark"
+                        />
+                      ) : (
+                        <p className="font-medium">{profile.contactInfo.email}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">Phone Number</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.contactInfo.phoneNumber || ''}
+                          onChange={(e) => updateContactInfo('phoneNumber', e.target.value)}
+                          className="input-dark"
+                        />
+                      ) : (
+                        <p className="font-medium">{profile.contactInfo.phoneNumber}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Experience */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                Experience
+              </h2>
+              <div className="space-y-4">
+                {profile.experience.map((exp) => (
+                  <Card key={exp.id} className="bg-card border-border">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold">{exp.title}</h3>
+                          <p className="text-muted-foreground">{exp.company}</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {exp.description}
+                          </p>
+                        </div>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          {exp.duration}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <div>
-                <Label className="text-gray-400">Last Name</Label>
-                <Input
-                  value={contactForm.lastName}
-                  onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })}
-                  className="bg-[#2a2a2a] border-[#3a3a3a] text-white"
-                />
+            </section>
+
+            {/* Resume Upload */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Resume
+              </h2>
+              <Card className="bg-card border-border">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">LethaboNeoCV.pdf</p>
+                      <p className="text-sm text-muted-foreground">
+                        Uploaded on {new Date().toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="ml-auto">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      View
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Education */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                Education
+              </h2>
+              <div className="space-y-4">
+                {profile.education.map((edu) => (
+                  <Card key={edu.id} className="bg-card border-border">
+                    <CardContent className="p-5">
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Degree</p>
+                          <p className="font-medium">{edu.degree}</p>
+                          <p className="text-sm text-muted-foreground">{edu.field}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Institution</p>
+                          <p className="font-medium">{edu.institution}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">GPA</p>
+                          <p className="font-medium">{edu.gpa}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <div>
-                <Label className="text-gray-400 flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> Email
-                </Label>
-                <Input
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                  className="bg-[#2a2a2a] border-[#3a3a3a] text-white"
-                />
+            </section>
+
+            {/* Projects */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Folder className="w-5 h-5 text-primary" />
+                Projects
+              </h2>
+              <div className="space-y-4">
+                {profile.projects.map((project) => (
+                  <Card key={project.id} className="bg-card border-border">
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold mb-2">{project.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <div>
-                <Label className="text-gray-400 flex items-center gap-2">
-                  <Phone className="w-4 h-4" /> Phone Number
-                </Label>
-                <Input
-                  value={contactForm.phoneNumber}
-                  onChange={(e) => setContactForm({ ...contactForm, phoneNumber: e.target.value })}
-                  className="bg-[#2a2a2a] border-[#3a3a3a] text-white"
-                />
+            </section>
+
+            {/* Skills */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-primary" />
+                Skills
+              </h2>
+              <Card className="bg-card border-border">
+                <CardContent className="p-5">
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skills.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Certifications */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Award className="w-5 h-5 text-primary" />
+                Certifications
+              </h2>
+              <div className="space-y-4">
+                {profile.certifications.map((cert) => (
+                  <Card key={cert.id} className="bg-card border-border">
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium">{cert.name}</p>
+                        <a
+                          href={cert.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-sm flex items-center gap-1"
+                        >
+                          View
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InfoField label="First Name" value={profile.contactInfo.firstName} />
-              <InfoField label="Last Name" value={profile.contactInfo.lastName} />
-              <InfoField label="Email" value={profile.contactInfo.email} icon={<Mail className="w-4 h-4" />} />
-              <InfoField label="Phone Number" value={profile.contactInfo.phoneNumber} icon={<Phone className="w-4 h-4" />} />
-            </div>
-          )}
-        </Section>
-
-        {/* Experience Section */}
-        <Section title="Experience" icon={<Briefcase className="w-5 h-5" />}>
-          <div className="space-y-4">
-            {profile.experience.map((exp) => (
-              <ExperienceCard 
-                key={exp.id} 
-                experience={exp} 
-                isEditing={isProfileEditing}
-                onUpdate={(updated) => updateExperience(exp.id, updated)}
-                onRemove={() => removeExperience(exp.id)}
-              />
-            ))}
-            {isProfileEditing && (
-              <Button
-                variant="outline"
-                onClick={() => addExperience({
-                  id: Date.now().toString(),
-                  title: 'New Position',
-                  company: 'Company Name',
-                  duration: 'Duration',
-                  description: 'Description of your role and achievements...'
-                })}
-                className="w-full border-dashed border-[#3a3a3a] text-gray-400 hover:text-white hover:border-[#f5c518]"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Experience
-              </Button>
-            )}
+            </section>
           </div>
-        </Section>
-
-        {/* Education Section */}
-        <Section title="Education" icon={<GraduationCap className="w-5 h-5" />}>
-          <div className="space-y-4">
-            {profile.education.map((edu) => (
-              <EducationCard 
-                key={edu.id} 
-                education={edu}
-                isEditing={isProfileEditing}
-                onUpdate={(updated) => updateEducation(edu.id, updated)}
-                onRemove={() => removeEducation(edu.id)}
-              />
-            ))}
-            {isProfileEditing && (
-              <Button
-                variant="outline"
-                onClick={() => addEducation({
-                  id: Date.now().toString(),
-                  degree: 'Degree',
-                  field: 'Field of Study',
-                  institution: 'Institution Name',
-                  gpa: 'GPA'
-                })}
-                className="w-full border-dashed border-[#3a3a3a] text-gray-400 hover:text-white hover:border-[#f5c518]"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Education
-              </Button>
-            )}
-          </div>
-        </Section>
-
-        {/* Projects Section */}
-        <Section title="Projects" icon={<Folder className="w-5 h-5" />}>
-          <div className="space-y-4">
-            {profile.projects.map((project) => (
-              <ProjectCard 
-                key={project.id} 
-                project={project}
-                isEditing={isProfileEditing}
-                onUpdate={(updated) => updateProject(project.id, updated)}
-                onRemove={() => removeProject(project.id)}
-              />
-            ))}
-            {isProfileEditing && (
-              <Button
-                variant="outline"
-                onClick={() => addProject({
-                  id: Date.now().toString(),
-                  name: 'Project Name',
-                  description: 'Description of your project...'
-                })}
-                className="w-full border-dashed border-[#3a3a3a] text-gray-400 hover:text-white hover:border-[#f5c518]"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Project
-              </Button>
-            )}
-          </div>
-        </Section>
-
-        {/* Skills Section */}
-        <Section title="Skills" icon={<Sparkles className="w-5 h-5" />}>
-          <div className="flex flex-wrap gap-2">
-            {profile.skills.map((skill) => (
-              <SkillBadge 
-                key={skill.id} 
-                skill={skill}
-                isEditing={isProfileEditing}
-                onRemove={() => removeSkill(skill.id)}
-              />
-            ))}
-            {isProfileEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => addSkill({
-                  id: Date.now().toString(),
-                  name: 'New Skill'
-                })}
-                className="border-dashed border-[#3a3a3a] text-gray-400 hover:text-white hover:border-[#f5c518]"
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Add
-              </Button>
-            )}
-          </div>
-        </Section>
-
-        {/* Certifications Section */}
-        <Section title="Certifications" icon={<Award className="w-5 h-5" />}>
-          <div className="flex flex-wrap gap-2">
-            {profile.certifications.map((cert) => (
-              <CertBadge 
-                key={cert.id} 
-                certification={cert}
-                isEditing={isProfileEditing}
-                onRemove={() => removeCertification(cert.id)}
-              />
-            ))}
-            {isProfileEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => addCertification({
-                  id: Date.now().toString(),
-                  name: 'New Certification',
-                  link: '#'
-                })}
-                className="border-dashed border-[#3a3a3a] text-gray-400 hover:text-white hover:border-[#f5c518]"
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Add
-              </Button>
-            )}
-          </div>
-        </Section>
+        </ScrollArea>
       </div>
     </div>
-  );
-}
-
-// Section Component
-function Section({ 
-  title, 
-  icon, 
-  children 
-}: { 
-  title: string; 
-  icon: React.ReactNode; 
-  children: React.ReactNode 
-}) {
-  return (
-    <div className="bg-[#1a1a1a] rounded-lg p-6 mb-6 border border-[#2a2a2a]">
-      <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <span className="text-[#f5c518]">{icon}</span>
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-// Info Field Component
-function InfoField({ 
-  label, 
-  value, 
-  icon 
-}: { 
-  label: string; 
-  value: string; 
-  icon?: React.ReactNode 
-}) {
-  return (
-    <div>
-      <p className="text-gray-500 text-sm mb-1 flex items-center gap-2">
-        {icon} {label}
-      </p>
-      <p className="text-white">{value}</p>
-    </div>
-  );
-}
-
-// Experience Card Component
-function ExperienceCard({ 
-  experience, 
-  isEditing, 
-  onUpdate, 
-  onRemove 
-}: { 
-  experience: Experience; 
-  isEditing: boolean; 
-  onUpdate: (exp: Experience) => void;
-  onRemove: () => void;
-}) {
-  const [isEditingLocal, setIsEditingLocal] = useState(false);
-  const [formData, setFormData] = useState(experience);
-
-  if (!isEditing) {
-    return (
-      <div className="bg-[#2a2a2a] rounded-lg p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-white font-medium">{experience.title}</h3>
-          <span className="text-[#f5c518] text-sm">{experience.duration}</span>
-        </div>
-        <p className="text-gray-400 text-sm mb-2">{experience.company}</p>
-        <p className="text-gray-500 text-sm">{experience.description}</p>
-      </div>
-    );
-  }
-
-  if (isEditingLocal) {
-    return (
-      <div className="bg-[#2a2a2a] rounded-lg p-4 space-y-3">
-        <Input
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-          placeholder="Title"
-        />
-        <Input
-          value={formData.company}
-          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-          className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-          placeholder="Company"
-        />
-        <Input
-          value={formData.duration}
-          onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-          className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-          placeholder="Duration"
-        />
-        <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-          placeholder="Description"
-        />
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              onUpdate(formData);
-              setIsEditingLocal(false);
-            }}
-            className="bg-[#f5c518] hover:bg-[#e6b800] text-black"
-          >
-            <Save className="w-4 h-4 mr-1" /> Save
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setFormData(experience);
-              setIsEditingLocal(false);
-            }}
-            className="text-gray-400"
-          >
-            <X className="w-4 h-4 mr-1" /> Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-[#2a2a2a] rounded-lg p-4 flex justify-between items-center">
-      <div>
-        <h3 className="text-white font-medium">{experience.title}</h3>
-        <p className="text-gray-400 text-sm">{experience.company} · {experience.duration}</p>
-      </div>
-      <div className="flex gap-2">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => setIsEditingLocal(true)}
-          className="text-gray-400 hover:text-white"
-        >
-          <Edit2 className="w-4 h-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// Education Card Component
-function EducationCard({ 
-  education, 
-  isEditing, 
-  onUpdate, 
-  onRemove 
-}: { 
-  education: Education; 
-  isEditing: boolean; 
-  onUpdate: (edu: Education) => void;
-  onRemove: () => void;
-}) {
-  const [isEditingLocal, setIsEditingLocal] = useState(false);
-  const [formData, setFormData] = useState(education);
-
-  if (!isEditing) {
-    return (
-      <div className="grid grid-cols-3 gap-4 text-sm">
-        <div>
-          <p className="text-white font-medium">{education.degree}</p>
-          <p className="text-gray-400">{education.field}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">Institution</p>
-          <p className="text-white">{education.institution}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">GPA</p>
-          <p className="text-white">{education.gpa}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isEditingLocal) {
-    return (
-      <div className="bg-[#2a2a2a] rounded-lg p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            value={formData.degree}
-            onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-            className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-            placeholder="Degree"
-          />
-          <Input
-            value={formData.field}
-            onChange={(e) => setFormData({ ...formData, field: e.target.value })}
-            className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-            placeholder="Field"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            value={formData.institution}
-            onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-            className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-            placeholder="Institution"
-          />
-          <Input
-            value={formData.gpa}
-            onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
-            className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-            placeholder="GPA"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              onUpdate(formData);
-              setIsEditingLocal(false);
-            }}
-            className="bg-[#f5c518] hover:bg-[#e6b800] text-black"
-          >
-            <Save className="w-4 h-4 mr-1" /> Save
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setFormData(education);
-              setIsEditingLocal(false);
-            }}
-            className="text-gray-400"
-          >
-            <X className="w-4 h-4 mr-1" /> Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-[#2a2a2a] rounded-lg p-4 flex justify-between items-center">
-      <div className="grid grid-cols-3 gap-4 flex-1 text-sm">
-        <div>
-          <p className="text-white font-medium">{education.degree}</p>
-          <p className="text-gray-400">{education.field}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">Institution</p>
-          <p className="text-white">{education.institution}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">GPA</p>
-          <p className="text-white">{education.gpa}</p>
-        </div>
-      </div>
-      <div className="flex gap-2 ml-4">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => setIsEditingLocal(true)}
-          className="text-gray-400 hover:text-white"
-        >
-          <Edit2 className="w-4 h-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// Project Card Component
-function ProjectCard({ 
-  project, 
-  isEditing, 
-  onUpdate, 
-  onRemove 
-}: { 
-  project: Project; 
-  isEditing: boolean; 
-  onUpdate: (proj: Project) => void;
-  onRemove: () => void;
-}) {
-  const [isEditingLocal, setIsEditingLocal] = useState(false);
-  const [formData, setFormData] = useState(project);
-
-  if (!isEditing) {
-    return (
-      <div className="bg-[#2a2a2a] rounded-lg p-4">
-        <h3 className="text-white font-medium mb-2">{project.name}</h3>
-        <p className="text-gray-500 text-sm">{project.description}</p>
-      </div>
-    );
-  }
-
-  if (isEditingLocal) {
-    return (
-      <div className="bg-[#2a2a2a] rounded-lg p-4 space-y-3">
-        <Input
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-          placeholder="Project Name"
-        />
-        <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="bg-[#3a3a3a] border-[#4a4a4a] text-white"
-          placeholder="Description"
-        />
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              onUpdate(formData);
-              setIsEditingLocal(false);
-            }}
-            className="bg-[#f5c518] hover:bg-[#e6b800] text-black"
-          >
-            <Save className="w-4 h-4 mr-1" /> Save
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setFormData(project);
-              setIsEditingLocal(false);
-            }}
-            className="text-gray-400"
-          >
-            <X className="w-4 h-4 mr-1" /> Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-[#2a2a2a] rounded-lg p-4 flex justify-between items-center">
-      <div>
-        <h3 className="text-white font-medium">{project.name}</h3>
-        <p className="text-gray-500 text-sm truncate max-w-md">{project.description}</p>
-      </div>
-      <div className="flex gap-2">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => setIsEditingLocal(true)}
-          className="text-gray-400 hover:text-white"
-        >
-          <Edit2 className="w-4 h-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// Skill Badge Component
-function SkillBadge({ 
-  skill, 
-  isEditing, 
-  onRemove 
-}: { 
-  skill: Skill; 
-  isEditing: boolean; 
-  onRemove: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-2 bg-[#2a2a2a] rounded-full px-4 py-2">
-      <span className="text-white text-sm">{skill.name}</span>
-      {isEditing && (
-        <button
-          onClick={onRemove}
-          className="text-gray-500 hover:text-red-500"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Certification Badge Component
-function CertBadge({ 
-  certification, 
-  isEditing, 
-  onRemove 
-}: { 
-  certification: Certification; 
-  isEditing: boolean; 
-  onRemove: () => void;
-}) {
-  return (
-    <a
-      href={certification.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 bg-[#2a2a2a] rounded-full px-4 py-2 hover:bg-[#3a3a3a] transition-colors"
-    >
-      <span className="text-white text-sm">{certification.name}</span>
-      {!isEditing && <ExternalLink className="w-3 h-3 text-[#f5c518]" />}
-      {isEditing && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            onRemove();
-          }}
-          className="text-gray-500 hover:text-red-500"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      )}
-    </a>
   );
 }
