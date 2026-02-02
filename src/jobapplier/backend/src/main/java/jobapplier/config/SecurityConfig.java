@@ -11,34 +11,38 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    // 1) Actuator security (runs first)
     @Bean
-    @Order(1)
-    SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher(EndpointRequest.toAnyEndpoint())
-            .csrf(csrf -> csrf.disable())
+            // Disable CSRF for APIs + H2 console
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers(
+                    "/h2-console/**",
+                    "/api/**",
+                    "/actuator/**"
+                )
+            )
+
+            // Allow H2 console to render in browser
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.disable())
+            )
+
+            // Authorization rules
             .authorizeHttpRequests(auth -> auth
-                // allow health + info without auth
-                .requestMatchers("/api/ai/**").permitAll()
-                // everything else under /actuator still requires auth
+                // --- PUBLIC / DIAGNOSTIC (DEV / DOCKER) ---
+                .requestMatchers(
+                    "/api/ai/health",
+                    "/actuator/health",
+                    "/actuator/info",
+                    "/h2-console/**"
+                ).permitAll()
+
+                // --- EVERYTHING ELSE ---
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults());
 
-        return http.build();
-    }
-
-    // 2) App security (runs after actuatorChain)
-    @Bean
-    @Order(2)
-    SecurityFilterChain appChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/ai/**").permitAll()
-                .anyRequest().authenticated()
-            )
+            // Simple HTTP Basic for now
             .httpBasic(Customizer.withDefaults());
 
         return http.build();

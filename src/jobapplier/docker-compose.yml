@@ -17,11 +17,12 @@ services:
     networks:
       - jobapplier-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health').read(); print('ok')"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 
   # Backend 
   backend:
@@ -32,21 +33,23 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_H2_CONSOLE_ENABLED=true
+      - SPRING_H2_CONSOLE_SETTINGS_WEB-ALLOW-OTHERS=true
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
       - AI_SERVICE_URL=http://ai-service:8001
       - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      ai-service:
-        condition: service_healthy
-    networks:
-      - jobapplier-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/ai/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    restart: unless-stopped
-
+    restart: unless-stopped  
+    depends_on:
+      ai-service:
+        condition: service_healthy
+    networks:
+      - jobapplier-network
   # Frontend 
   frontend:
     build:
