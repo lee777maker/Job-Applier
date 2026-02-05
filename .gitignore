@@ -18,3 +18,5 @@ src/jobapplier/ai-service/.venv/
 .venv/
 venv/
 .env
+.env.*
+
