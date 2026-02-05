@@ -4,7 +4,7 @@ import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, X, Loader2, CheckCircle2 } from 'lucide-react';
+import { Upload, FileText, X, Loader2, CheckCircle2} from 'lucide-react';
 import { toast } from 'sonner';
 import { extractCVData } from '@/lib/api';
 

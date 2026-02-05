@@ -1,26 +1,27 @@
 package jobapplier.model;
-import java.lang.annotation.Inherited;
+
 import java.util.UUID;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-
 @Entity
 @Table(name = "resumes")
-
-
 public class Resume {
-    @Id 
-    private final UUID id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @Id
+    @GeneratedValue
+    private UUID id; 
 
+    @OneToOne(fetch= FetchType.LAZY,optional = true)
+    @JoinColumn(name = "user_id",unique=true ,nullable = true)
     private User user;
+
     private String fileName;
     private String contentType;
     private String filePath;
     private Instant uploadedAt;
+
+    protected Resume() {}
 
     public Resume(UUID id, User user, String fileName, String filePath, Instant uploadedAt) {
         this.id = id;
@@ -29,38 +30,14 @@ public class Resume {
         this.filePath = filePath;
         this.uploadedAt = uploadedAt;
     }
+    public UUID getId() { return id; }
+    public User getUser() { return user; }
+    public String getFileName() { return fileName; }
+    public String getContentType() { return contentType; }
+    public String getFilePath() { return filePath; }
+    public Instant getUploadedAt() { return uploadedAt; }
 
-    //Getters
-    public UUID getId() {
-        return id;
-    }
-    public User getUser() {
-        return user;
-    }
-    public String getFileName() {
-        return fileName;}
-
-    public String getFilePath() {
-        return filePath;
-    }
-    public Instant getUploadedAt() {
-        return uploadedAt;
-    }
-
-    //Setters
     public void setUser(User user) {
         this.user = user;
     }
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-    public void setUploadedAt(Instant uploadedAt) {
-        this.uploadedAt = uploadedAt;
-    }
-    
-
-    
 }

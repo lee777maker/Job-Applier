@@ -3,86 +3,127 @@ package jobapplier.model;
 import java.util.UUID;
 import jakarta.persistence.*;
 
-
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 
+@Entity
+@Table(name = "users")
 public class User {
-    
+
     @Id
-    private final UUID id;
+    private UUID id; 
+
     private String name;
     private String surname;
+
+    @Column(nullable = false, unique = true)
     private String email;
-    private Resume resume;
 
     // Store only the encoded Argon2 hash string
+    @Column(nullable = false)
     private String passwordHash;
 
-    // iterations: 3, memory: 65536 KB (64MB), parallelism: 1
-    private static final int ITERATIONS = 3;
-    private static final int MEMORY_KB = 65536;
-    private static final int PARALLELISM = 1;
+    @Column(nullable=false)
+    private boolean enabled=true;
+    // optional: map back from User -> Resume
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Resume resume;
 
-    public User(UUID id, String name, String surname, String email, String rawPassword, Resume resume, boolean hashed) {
-        if (id == null) throw new IllegalArgumentException("id cannot be null");
-        if (email == null || email.isBlank()) throw new IllegalArgumentException("email cannot be blank");
-        if (rawPassword == null || rawPassword.isBlank()) throw new IllegalArgumentException("password cannot be blank");
+    protected User() {
+        // JPA needs a no-args constructor
+    }
 
-        this.id = id;
+    // main constructor (raw password)
+    public User(UUID id, String name, String surname, String email, String rawPassword, Resume resume) {
+        // if (id == null) throw new IllegalArgumentException("id cannot be null");
+        // if (email == null || email.isBlank()) throw new IllegalArgumentException("email cannot be blank");
+        // if (rawPassword == null || rawPassword.isBlank()) throw new IllegalArgumentException("password cannot be blank");
+
+        this.id = require(id, "id");
         this.name = name;
         this.surname = surname;
-        this.email = email.trim().toLowerCase();
-        this.passwordHash = hashPassword(rawPassword);
-        this.resume = resume;
+        this.email = normalizeEmail(email);
+        setPassword(rawPassword);
+        setResume(resume);
     }
 
-    //
-        public static User fromHash(UUID id, String name, String surname, String email, String passwordHash) {
-        User u = new User(id, name, surname, email, passwordHash, null, true);
-        u.passwordHash = passwordHash;
+    public User(UUID id, String name, String surname, String email, String rawPassword, Resume resume, boolean enabled){
+        this.id = require(id, "id");
+        this.name = name;
+        this.surname = surname;
+        this.email = normalizeEmail(email);
+        this.enabled =enabled;
+        
+        if(rawPassword != null && !rawPassword.isBlank()){
+            setPassword(rawPassword);
+        }else if(passwordHash!=null && !passwordHash.isBlank()){
+            this.passwordHash=passwordHash;
+        }else throw new IllegalArgumentException("Either rawPassword or passwordHash must be provided");
+    }
+    public static User fromHash(UUID id, String name, String surname, String email, String passwordHash) {
+        return fromHash(id, name, surname, email, passwordHash, null, true);
+    }
+
+    public static User fromHash(UUID id, String name, String surname, String email, String passwordHash, Resume resume) {
+        return fromHash(id, name, surname, email, passwordHash, resume, true);
+    }
+    // DB hydration constructor/factory (already hashed)
+    public static User fromHash(UUID id, String name, String surname, String email, String passwordHash, Resume resume, boolean enabled) {
+        User u = new User();
+        u.id = require(id,"id");
+        u.name = name;
+        u.surname = surname;
+        u.email = normalizeEmail(email);
+        u.passwordHash = requireNonBlank(passwordHash,"passwordHash");
+        u.enabled = enabled;   
+        u.setResume(resume);
         return u;
     }
-
+    public void setPassword(String rawPassword) {
+        this.passwordHash = hashPassword(requireNonBlank(rawPassword, "password"));
+    }
 
     public boolean verifyPassword(String rawPassword) {
         if (rawPassword == null) return false;
         Argon2 argon2 = Argon2Factory.create();
-        try {
-            return argon2.verify(this.passwordHash, rawPassword.toCharArray());
-        } finally {
-            argon2.wipeArray(rawPassword.toCharArray());
-        }
+        return argon2.verify(this.passwordHash, rawPassword.toCharArray());
     }
-
-    public void setPassword(String newRawPassword) {
-        if (newRawPassword == null || newRawPassword.isBlank())
-            throw new IllegalArgumentException("password cannot be blank");
-        this.passwordHash = hashPassword(newRawPassword);
-    }
-
     private static String hashPassword(String rawPassword) {
-        Argon2 argon2 = Argon2Factory.create(); // defaults to Argon2id if available in library version
-        char[] pwd = rawPassword.toCharArray();
-        try {
-            return argon2.hash(ITERATIONS, MEMORY_KB, PARALLELISM, pwd);
-        } finally {
-            argon2.wipeArray(pwd);
+        Argon2 argon2 = Argon2Factory.create();
+        return argon2.hash(3, 65536, 1, rawPassword.toCharArray());
+    }
+    // helpers
+    public void setResume(Resume resume){
+        this.resume = resume;
+        if(resume != null){
+            resume.setUser(this);
         }
     }
+    //getters
+    public UUID getId(){return id;}
+    public String getName(){return name;}
+    public String getSurname(){return surname;}
+    public String getEmail(){return email;}
+    public String getPasswordHash() {return passwordHash;}
+    public boolean isEnabled(){return enabled;}
+    public Resume getResume(){return resume;}
 
-    public UUID getId() { return id; }
-    public String getName() { return name; }
-    public String getSurname() { return surname; }
-    public String getEmail() { return email; }
-    public String getPasswordHash() { return passwordHash; }
-    public Resume getResume() { return resume; }
-
-    public void setName(String name) { this.name = name; }
-    public void setSurname(String surname) { this.surname = surname; }
-    public void setResume(Resume resume) { this.resume = resume; }
-    public void setEmail(String email) {
-        if (email == null || email.isBlank()) throw new IllegalArgumentException("email cannot be blank");
-        this.email = email.trim().toLowerCase();
+    private static <T> T require(T v, String field) {
+        if (v == null) throw new IllegalArgumentException(field + " cannot be null");
+        return v;
     }
+
+    private static String requireNonBlank(String v, String field) {
+        if (v == null || v.isBlank()) throw new IllegalArgumentException(field + " cannot be blank");
+        return v;
+    }
+
+    private static String normalizeEmail(String email) {
+        String e = requireNonBlank(email, "email").trim().toLowerCase();
+        return e;
+    }
+
 }
+
+
+

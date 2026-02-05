@@ -12,6 +12,7 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 import pdfminer
 import docx
+import re
 # Load environment variables from .env file (backup safety measure)
 load_dotenv()
 
@@ -92,7 +93,7 @@ class CVExtractedData(BaseModel):
     educations: List[Education] = []
     projects: List[Project] = []
     certifications: List[Certification] = []
-    skills: List[Skill] = []
+    skills: List[Union[str,Skill]] = []
     languages: List[Language] = []
     rawText: str = ""
 
@@ -158,7 +159,8 @@ CV_EXTRACTION_SYSTEM_PROMPT = """You are three experts:
 2. A JSON Formatter: You format the extracted information into a predefined JSON schema.
 3. A Data Cleaner: You ensure the extracted data is clean, consistent, and free of errors.
 
-Your Task: Return ONLY a valid JSON matching this exact schema:
+CRITICAL: Return ONLY a valid JSON object. For the skills field, you MUST return an array of objects with id, name, and level fields.
+Format:
 {
   "contactInfo": {
     "firstName": string,
@@ -218,6 +220,7 @@ Rules:
 - EXTRACT ALL information accurately
 - Use empty strings for missing fields
 - Generate unique IDs for each item
+- skills MUST be objects with id, name, and level fields, NOT simple strings
 - Include ALL skills mentioned
 - Preserve original text in rawText
     
@@ -479,31 +482,54 @@ async def extract_cv(file: UploadFile = File(...)):
         result = json.loads(response.choices[0].message.content)
         result['rawText'] = cleaned_text
         
-        # Ensure all required fields exist
+        # Ensure all required fields exist with defaults
         if 'contactInfo' not in result:
-            result['contactInfo'] = {"firstName": "", "lastName": "", "email": "", "phoneNumber": ""}
-        if 'experience' not in result:
-            result['experience'] = []
+            result['contactInfo'] = {"firstName": "", "lastName": "", "email": "", "phone": "", "linkedin": "", "github": ""}
+        if 'experiences' not in result:
+            result['experiences'] = []
         if 'education' not in result:
-            result['education'] = []
-        if 'skills' not in result:
-            result['skills'] = extract_skills_from_text(cleaned_text)
+            result['educations'] = []
         if 'projects' not in result:
             result['projects'] = []
         if 'certifications' not in result:
             result['certifications'] = []
+        if 'languages' not in result:
+            result['languages'] = []
+        
+        # Normalize skills to handle both string list and object list
+        if 'skills' not in result:
+            result['skills'] = []
+        else:
+            normalized_skills = []
+            for i, skill in enumerate(result['skills']):
+                if isinstance(skill, str):
+                    # Convert string to Skill object
+                    normalized_skills.append({
+                        "id": str(i + 1),
+                        "name": skill,
+                        "level": ""
+                    })
+                elif isinstance(skill, dict):
+                    # Ensure dict has all required fields
+                    normalized_skills.append({
+                        "id": str(skill.get('id', i + 1)),
+                        "name": skill.get('name', ''),
+                        "level": skill.get('level', '')
+                    })
+            result['skills'] = normalized_skills
         
         return CVExtractedData(**result)
         
     except Exception as e:
-        # Fallback: return basic extraction
+        # Fallback: return basic extraction with empty structured data
         return CVExtractedData(
             contactInfo=ContactInfo(),
-            experience=[],
-            education=[],
-            skills=extract_skills_from_text(cleaned_text),
+            experiences=[],
+            educations=[],
+            skills=[], 
             projects=[],
             certifications=[],
+            languages=[],
             rawText=cleaned_text
         )
 
