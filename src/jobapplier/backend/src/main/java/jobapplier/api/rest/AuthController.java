@@ -42,12 +42,15 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
+            // Create user without resume initially - resume will be null
             User user = new User(
                 UUID.randomUUID(),
                 request.name(),
                 request.surname(),
                 request.email(),
-                request.password()
+                request.password(),
+                null,  // resume - will be set later via resume upload
+                false  // hashed - password is raw, will be hashed in constructor
             );
             manager.saveProfile(user);
             

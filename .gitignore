@@ -6,7 +6,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
+.env
 # Node
 node_modules/
 
@@ -17,3 +17,4 @@ node_modules/
 src/jobapplier/ai-service/.venv/
 .venv/
 venv/
+.env

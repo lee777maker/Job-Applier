@@ -1,9 +1,13 @@
 package jobapplier.model;
-
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
+@Entity
+@Table(name = "jobs")
 
 public class Job {
+    
+    @Id
     private final UUID id;
     private String company;
     private String title;

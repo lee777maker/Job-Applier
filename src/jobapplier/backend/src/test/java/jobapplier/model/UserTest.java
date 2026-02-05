@@ -9,7 +9,7 @@ public class UserTest {
 
     @Test
     void passwordVerificationWorks() {
-        User user = new User(UUID.randomUUID(), "A", "B", "a@b.com", "pass123");
+        User user = new User(UUID.randomUUID(), "A", "B", "a@b.com", "pass123", null, false);
         assertTrue(user.verifyPassword("pass123"));
         assertFalse(user.verifyPassword("wrong"));
     }

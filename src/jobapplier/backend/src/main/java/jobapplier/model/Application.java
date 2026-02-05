@@ -3,8 +3,11 @@ package jobapplier.model;
 import java.time.Instant;
 import java.util.UUID;
 import jobapplier.workflow.ApplicationStatus;
-
+import jakarta.persistence.*;
+@Entity
+@Table(name = "applications")
 public class Application {
+    @Id
     private final UUID id;
     private final UUID userId;
     private final UUID jobId;
