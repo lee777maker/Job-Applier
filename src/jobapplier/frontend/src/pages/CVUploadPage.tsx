@@ -6,11 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, X, Loader2, CheckCircle2} from 'lucide-react';
 import { toast } from 'sonner';
-import { extractCVData } from '@/lib/api';
+import { extractCV } from '@/lib/api';
 
 export default function CVUploadPage() {
   const navigate = useNavigate();
-  const { setUploadedCV, setExtractedCVData, setProfile } = useApp();
+  const { setUploadedCV, setProfile } = useApp();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -66,70 +66,75 @@ export default function CVUploadPage() {
     }
   };
 
-  const handleUpload = async () => {
-    if (!file) {
-      toast.error('Please select a file first');
-      return;
-    }
+  // In CVUploadPage.tsx, replace handleUpload:
 
-    setIsUploading(true);
+const handleUpload = async () => {
+  if (!file) {
+    toast.error('Please select a file first');
+    return;
+  }
+
+  setIsUploading(true);
+  setUploadProgress(0);
+
+  try {
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => (prev >= 90 ? 90 : prev + 10));
+    }, 200);
+
+    // REAL API CALL - Extract CV
+    const extractedData = await extractCV(file);
+    
+    clearInterval(progressInterval);
+    setUploadProgress(100);
+
+    // Create profile from extracted data
+    const profile = {
+      id: 'profile-' + Date.now(),
+      contactInfo: {
+        firstName: extractedData.contactInfo?.firstName || '',
+        lastName: extractedData.contactInfo?.lastName || '',
+        email: extractedData.contactInfo?.email || '',
+        phoneNumber: extractedData.contactInfo?.phone || '',
+      },
+      experience: extractedData.experiences?.map((exp: any, i: number) => ({
+        id: exp.id || `exp-${i}`,
+        title: exp.title,
+        company: exp.company,
+        duration: exp.duration,
+        description: exp.description,
+      })) || [],
+      education: extractedData.educations?.map((edu: any, i: number) => ({
+        id: edu.id || `edu-${i}`,
+        degree: edu.degree,
+        institution: edu.institution,
+        field: edu.field,
+        duration: edu.duration,
+        gpa: '',
+      })) || [],
+      skills: extractedData.skills?.map((skill: any) => 
+        typeof skill === 'string' ? skill : skill.name
+      ) || [],
+      projects: extractedData.projects || [],
+      certifications: extractedData.certifications || [],
+      resumeText: extractedData.rawText || '',
+      resumeFileName: file.name,
+      resumeUploadedAt: new Date().toISOString(),
+    };
+
+    setProfile(profile);
+    setExtractionComplete(true);
+    toast.success('CV uploaded and analyzed successfully!');
+    
+    setTimeout(() => navigate('/preferences'), 1500);
+  } catch (error: any) {
+    toast.error(error.message || 'Failed to upload CV');
     setUploadProgress(0);
-
-    try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
-      // Extract CV data using AI
-      const extractedData = await extractCVData(file);
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Store extracted data
-      setExtractedCVData(extractedData);
-      
-      // Create profile from extracted data
-      if (extractedData) {
-        const profile = {
-          id: 'profile-' + Date.now(),
-          contactInfo: extractedData.contactInfo || {
-            firstName: '',
-            lastName: '',
-            email: '',
-            phoneNumber: '',
-          },
-          experience: extractedData.experience || [],
-          education: extractedData.education || [],
-          skills: extractedData.skills || [],
-          projects: extractedData.projects || [],
-          certifications: extractedData.certifications || [],
-          resumeText: extractedData.rawText || '',
-        };
-        setProfile(profile);
-      }
-
-      setExtractionComplete(true);
-      toast.success('CV uploaded and analyzed successfully!');
-      
-      // Navigate to preferences after a short delay
-      setTimeout(() => {
-        navigate('/preferences');
-      }, 1500);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload CV');
-      setUploadProgress(0);
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const clearFile = () => {
     setFile(null);

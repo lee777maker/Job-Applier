@@ -20,6 +20,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getMatchScore, tailorResume, generateCoverLetter } from '@/lib/api';
 import type { MatchScoreResult, TailoredResume } from '@/types';
 
 export default function ATSScorePage() {
@@ -46,44 +47,13 @@ export default function ATSScorePage() {
 
     setIsAnalyzing(true);
     try {
-      // In production, call actual API
-      // const result = await getMatchScore(
-      //   { skills: profile?.skills || [] },
-      //   jobDescription,
-      //   cvText
-      // );
-
-      // Simulate API delay and mock result
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockResult: MatchScoreResult = {
-        match_score: 0.75,
-        ats_score: 75,
-        strengths: [
-          'Strong technical skills in Java and Python',
-          'Relevant project experience',
-          'Good educational background',
-        ],
-        gaps: [
-          'Missing cloud platform experience',
-          'Limited leadership experience mentioned',
-        ],
-        keywords_to_add: [
-          'AWS',
-          'Docker',
-          'Kubernetes',
-          'CI/CD',
-          'Agile',
-        ],
-        recommended_bullets: [
-          'Implemented CI/CD pipelines reducing deployment time by 40%',
-          'Led a team of 3 developers to deliver project 2 weeks ahead of schedule',
-          'Architected scalable microservices handling 1M+ daily requests',
-        ],
-        confidence: 0.85,
-      };
-
-      setMatchResult(mockResult);
+      // REAL API CALL
+      const result = await getMatchScore(
+        { skills: profile?.skills || [] },
+        jobDescription,
+        cvText
+      );
+      setMatchResult(result);
       toast.success('Analysis complete!');
     } catch (error: any) {
       toast.error(error.message || 'Failed to analyze');
@@ -97,55 +67,17 @@ export default function ATSScorePage() {
       toast.error('Please analyze first');
       return;
     }
+  
 
     setIsTailoring(true);
     try {
-      // In production, call actual API
-      // const result = await tailorResume(
-      //   cvText,
-      //   jobDescription,
-      //   { skills: profile?.skills || [] }
-      // );
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      const mockTailored: TailoredResume = {
-        tailored_resume: `LETHABO NEO
-Johannesburg, Gauteng | +27 81 447 8357 | lethaboneo@icloud.com | linkedin.com/in/lethabo-neo
-
-SUMMARY
-Junior Full Stack Engineer with strong foundations in Java, Python, and systems programming. Experienced in building concurrent systems, production-grade solutions, data modeling, and data-driven pipelines. Proficient in AWS, Docker, Kubernetes, and CI/CD practices. Eager to leverage problem-solving expertise to deliver reliable software solutions aligned with business requirements.
-
-TECHNICAL SKILLS
-Languages: Java, Python, JavaScript, TypeScript, SQL
-Cloud & DevOps: AWS (EC2, S3, Lambda), Docker, Kubernetes, CI/CD, Jenkins
-Frameworks: React, Node.js, Spring Boot, FastAPI
-Databases: PostgreSQL, MongoDB, Redis
-Tools: Git, GitHub Actions, Terraform, Ansible
-
-PROFESSIONAL EXPERIENCE
-
-Junior Software Engineer | Tech Corp | Jan 2024 - Present
-• Architected scalable microservices using AWS ECS and Docker, handling 1M+ daily requests
-• Implemented CI/CD pipelines with GitHub Actions, reducing deployment time by 40%
-• Led migration to Kubernetes, improving system reliability by 99.9%
-• Mentored 2 junior developers in Agile practices and code reviews
-
-Software Developer Intern | StartupXYZ | Jun 2023 - Dec 2023
-• Developed RESTful APIs using Spring Boot and PostgreSQL
-• Built responsive React frontend components serving 10K+ users
-• Implemented automated testing, achieving 85% code coverage`,
-        changes_made: {
-          words_added: 45,
-          words_removed: 12,
-          length_change_percent: 8.5,
-          top_keywords_added: ['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Agile'],
-        },
-        optimization_score: 0.92,
-      };
-
-      setTailoredResume(mockTailored);
+           // REAL API CALL
+      const result = await tailorResume(
+        cvText,
+        jobDescription,
+        { skills: profile?.skills || [] }
+      );
+      setTailoredResume(result);
       setActiveTab('cv');
       toast.success('Resume tailored successfully!');
     } catch (error: any) {
@@ -154,7 +86,7 @@ Software Developer Intern | StartupXYZ | Jun 2023 - Dec 2023
       setIsTailoring(false);
     }
   };
-
+ 
   const handleGenerateCoverLetter = async () => {
     if (!matchResult) {
       toast.error('Please analyze first');
@@ -162,35 +94,18 @@ Software Developer Intern | StartupXYZ | Jun 2023 - Dec 2023
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockCoverLetter = `Dear Hiring Manager,
-
-I am writing to express my strong interest in the Software Engineer position at your company. With my background in full-stack development and expertise in Java, Python, and cloud technologies, I am confident in my ability to contribute effectively to your team.
-
-During my time at Tech Corp, I have gained hands-on experience building scalable microservices and implementing CI/CD pipelines. I have successfully architected systems handling over 1 million daily requests and led initiatives that reduced deployment time by 40%.
-
-My technical skills align well with your requirements:
-• Proficient in Java, Python, and JavaScript
-• Experienced with AWS, Docker, and Kubernetes
-• Strong understanding of Agile methodologies
-• Track record of delivering high-quality code
-
-I am particularly drawn to your company's innovative approach to technology and would welcome the opportunity to discuss how my skills can contribute to your team's success.
-
-Thank you for considering my application. I look forward to the opportunity to speak with you further.
-
-Sincerely,
-Lethabo Neo`;
-
-      setCoverLetter(mockCoverLetter);
+      // REAL API CALL
+      const result = await generateCoverLetter(
+        jobDescription,
+        { skills: profile?.skills || [], name: profile?.contactInfo?.firstName }
+      );
+      setCoverLetter(result.cover_letter);
       setActiveTab('cover-letter');
       toast.success('Cover letter generated!');
     } catch (error: any) {
       toast.error('Failed to generate cover letter');
     }
-  };
+  }
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-500';

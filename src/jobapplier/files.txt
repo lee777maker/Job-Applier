@@ -1,156 +1,79 @@
 .
-├── .gitignore
-├── .pids
 ├── ai-service
-│   ├── .env
-│   ├── .pytest_cache
-│   │   ├── .gitignore
-│   │   ├── CACHEDIR.TAG
-│   │   ├── README.md
-│   │   └── v
-│   │       └── cache
-│   │           └── nodeids
 │   ├── app.py
+│   ├── config.py
 │   ├── Dockerfile
+│   ├── extractors
+│   │   ├── __init__.py
+│   │   ├── contact.py
+│   │   ├── llm.py
+│   │   └── sections.py
 │   ├── load_health.py
+│   ├── models.py
+│   ├── patterns.py
 │   ├── requirements.txt
 │   ├── run.py
+│   ├── services
+│   │   └── cv_extraction.py
 │   ├── smoke_test.py
 │   └── tests
 │       └── test_api.py
 ├── backend
-│   ├── .mvn
-│   │   └── wrapper
-│   │       └── maven-wrapper.properties
 │   ├── Dockerfile
 │   ├── mvnw
 │   ├── mvnw.cmd
 │   ├── pom.xml
-│   ├── src
-│   │   ├── main
-│   │   │   ├── java
-│   │   │   │   └── jobapplier
-│   │   │   │       ├── ai
-│   │   │   │       │   ├── AIClient.java
-│   │   │   │       │   ├── AIResult.java
-│   │   │   │       │   └── AIStatus.java
-│   │   │   │       ├── api
-│   │   │   │       │   ├── Manager.java
-│   │   │   │       │   └── rest
-│   │   │   │       │       ├── AIController.java
-│   │   │   │       │       ├── ApplicationController.java
-│   │   │   │       │       ├── AuthController.java
-│   │   │   │       │       ├── JobController.java
-│   │   │   │       │       └── ProfileController.java
-│   │   │   │       ├── audit
-│   │   │   │       │   └── AuditService.java
-│   │   │   │       ├── config
-│   │   │   │       │   ├── AppConfig.java
-│   │   │   │       │   └── SecurityConfig.java
-│   │   │   │       ├── JobApplierApplication.java
-│   │   │   │       ├── model
-│   │   │   │       │   ├── Application.java
-│   │   │   │       │   ├── Job.java
-│   │   │   │       │   ├── Task.java
-│   │   │   │       │   └── User.java
-│   │   │   │       ├── recommendation
-│   │   │   │       │   ├── JobRecommender.java
-│   │   │   │       │   └── JobRecommenderImpl.java
-│   │   │   │       ├── repository
-│   │   │   │       │   ├── ApplicationRepository.java
-│   │   │   │       │   ├── JobRepository.java
-│   │   │   │       │   ├── TaskRepository.java
-│   │   │   │       │   ├── UserRepository.java
-│   │   │   │       │   └── UserRepositoryJdbc.java
-│   │   │   │       └── workflow
-│   │   │   │           └── ApplicationStatus.java
-│   │   │   ├── recommendation
-│   │   │   │   ├── JobRecommender.java
-│   │   │   │   └── JobRecommenderImpl.java
-│   │   │   └── resources
-│   │   │       └── application.properties
-│   │   └── test
-│   │       ├── java
-│   │       │   └── jobapplier
-│   │       │       └── model
-│   │       │           └── UserTest.java
-│   │       └── UserRepositoryJdbcTest.java
-│   └── target
-│       ├── classes
-│       │   ├── application.properties
-│       │   └── jobapplier
-│       │       ├── ai
-│       │       │   ├── AIClient.class
-│       │       │   ├── AIResult.class
-│       │       │   └── AIStatus.class
-│       │       ├── api
-│       │       │   ├── Manager.class
-│       │       │   ├── Manager$1.class
-│       │       │   └── rest
-│       │       │       ├── AIController.class
-│       │       │       ├── AIController$1.class
-│       │       │       ├── AIController$ChatRequest.class
-│       │       │       ├── AIController$CoverLetterRequest.class
-│       │       │       ├── AIController$MatchScoreRequest.class
-│       │       │       ├── AIController$TailorResumeRequest.class
-│       │       │       ├── ApplicationController.class
-│       │       │       ├── ApplicationController$CreateApplicationRequest.class
-│       │       │       ├── AuthController.class
-│       │       │       ├── AuthController$LoginRequest.class
-│       │       │       ├── AuthController$RegisterRequest.class
-│       │       │       ├── JobController.class
-│       │       │       ├── JobController$CreateJobRequest.class
-│       │       │       ├── ProfileController.class
-│       │       │       ├── ProfileController$ContactInfo.class
-│       │       │       └── ProfileController$ProfileUpdateRequest.class
-│       │       ├── audit
-│       │       │   └── AuditService.class
-│       │       ├── config
-│       │       │   ├── AppConfig.class
-│       │       │   ├── AppConfig$1.class
-│       │       │   ├── AppConfig$2.class
-│       │       │   ├── AppConfig$3.class
-│       │       │   ├── AppConfig$4.class
-│       │       │   ├── AppConfig$5.class
-│       │       │   └── SecurityConfig.class
-│       │       ├── JobApplierApplication.class
-│       │       ├── model
-│       │       │   ├── Application.class
-│       │       │   ├── Job.class
-│       │       │   ├── Task.class
-│       │       │   ├── Task$TaskStatus.class
-│       │       │   ├── Task$TaskType.class
-│       │       │   └── User.class
-│       │       ├── recommendation
-│       │       │   ├── JobRecommender.class
-│       │       │   ├── JobRecommender$JobMatch.class
-│       │       │   └── JobRecommenderImpl.class
-│       │       ├── repository
-│       │       │   ├── ApplicationRepository.class
-│       │       │   ├── JobRepository.class
-│       │       │   ├── TaskRepository.class
-│       │       │   ├── UserRepository.class
-│       │       │   └── UserRepositoryJdbc.class
-│       │       └── workflow
-│       │           └── ApplicationStatus.class
-│       ├── generated-sources
-│       │   └── annotations
-│       ├── generated-test-sources
-│       │   └── test-annotations
-│       ├── maven-status
-│       │   └── maven-compiler-plugin
-│       │       ├── compile
-│       │       │   └── default-compile
-│       │       │       ├── createdFiles.lst
-│       │       │       └── inputFiles.lst
-│       │       └── testCompile
-│       │           └── default-testCompile
-│       │               ├── createdFiles.lst
-│       │               └── inputFiles.lst
-│       └── test-classes
-│           └── jobapplier
-│               └── model
-│                   └── UserTest.class
+│   └── src
+│       ├── main
+│       │   ├── java
+│       │   │   └── jobapplier
+│       │   │       ├── ai
+│       │   │       │   ├── AIClient.java
+│       │   │       │   ├── AIResult.java
+│       │   │       │   └── AIStatus.java
+│       │   │       ├── api
+│       │   │       │   ├── Manager.java
+│       │   │       │   └── rest
+│       │   │       │       ├── AIController.java
+│       │   │       │       ├── ApplicationController.java
+│       │   │       │       ├── AuthController.java
+│       │   │       │       ├── JobController.java
+│       │   │       │       └── ProfileController.java
+│       │   │       ├── audit
+│       │   │       │   └── AuditService.java
+│       │   │       ├── config
+│       │   │       │   ├── AppConfig.java
+│       │   │       │   └── SecurityConfig.java
+│       │   │       ├── JobApplierApplication.java
+│       │   │       ├── model
+│       │   │       │   ├── Application.java
+│       │   │       │   ├── Job.java
+│       │   │       │   ├── Resume.java
+│       │   │       │   ├── Task.java
+│       │   │       │   └── User.java
+│       │   │       ├── recommendation
+│       │   │       │   ├── JobRecommender.java
+│       │   │       │   └── JobRecommenderImpl.java
+│       │   │       ├── repository
+│       │   │       │   ├── ApplicationRepository.java
+│       │   │       │   ├── JobRepository.java
+│       │   │       │   ├── TaskRepository.java
+│       │   │       │   ├── UserRepository.java
+│       │   │       │   └── UserRepositoryJdbc.java
+│       │   │       └── workflow
+│       │   │           └── ApplicationStatus.java
+│       │   ├── recommendation
+│       │   │   ├── JobRecommender.java
+│       │   │   └── JobRecommenderImpl.java
+│       │   └── resources
+│       │       ├── application.properties
+│       │       └── schema.sql
+│       └── test
+│           ├── java
+│           │   └── jobapplier
+│           │       └── model
+│           │           └── UserTest.java
+│           └── UserRepositoryJdbcTest.java
 ├── docker-compose.yml
 ├── files.txt
 ├── frontend
@@ -247,9 +170,6 @@
 │   ├── tsconfig.node.json
 │   └── vite.config.ts
 ├── logs
-│   ├── ai-service.log
-│   ├── backend.log
-│   └── frontend.log
 └── start.sh
 
-65 directories, 188 files
+36 directories, 137 files

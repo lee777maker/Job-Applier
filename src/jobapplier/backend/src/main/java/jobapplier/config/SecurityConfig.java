@@ -33,6 +33,8 @@ public class SecurityConfig {
                 // --- PUBLIC / DIAGNOSTIC (DEV / DOCKER) ---
                 .requestMatchers(
                     "/api/ai/health",
+                    "/api/ai/upload-resume",
+                    "/api/profile/**",
                     "/actuator/health",
                     "/actuator/info",
                     "/h2-console/**"

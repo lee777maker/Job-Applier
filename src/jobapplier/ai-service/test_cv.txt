@@ -1,0 +1,37 @@
+John Smith
+john.smith@email.com | +27 82 123 4567 | linkedin.com/in/johnsmith | github.com/johnsmith
+
+PROFESSIONAL SUMMARY
+Experienced software engineer with 5+ years in full-stack development.
+
+EXPERIENCE
+Senior Software Engineer
+TechCorp Inc.
+January 2020 - Present
+- Led development of microservices architecture
+- Managed team of 5 developers
+- Implemented CI/CD pipelines
+
+Software Developer
+StartupXYZ
+June 2017 - December 2019
+- Built React frontend applications
+- Developed REST APIs using Node.js
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Cape Town
+2013 - 2016
+
+SKILLS
+Python, JavaScript, React, Node.js, Docker, Kubernetes, AWS
+
+PROJECTS
+Portfolio Website - Built with Next.js and deployed on Vercel
+
+CERTIFICATIONS
+AWS Certified Solutions Architect - Amazon Web Services, 2021
+
+LANGUAGES
+English - Native
+Afrikaans - Conversational

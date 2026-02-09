@@ -1,226 +1,118 @@
-import type { User, UserProfile, Job, MatchScoreResult, TailoredResume } from '@/types';
+// frontend/src/lib/api.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8001';
 
-// Auth API
-export async function login(email: string, password: string): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+// Helper for API calls
+async function fetchApi(endpoint: string, options: RequestInit = {}, baseUrl: string = API_BASE_URL) {
+  const url = `${baseUrl}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || `HTTP ${response.status}`);
+  }
+  
+  return response.json();
+}
+
+// Auth APIs
+export const login = (email: string, password: string) => 
+  fetchApi('/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Login failed');
-  }
-  
-  return response.json();
-}
 
-export async function register(name: string, surname: string, email: string, password: string): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+export const register = (name: string, surname: string, email: string, password: string) =>
+  fetchApi('/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, surname, email, password }),
   });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Registration failed');
-  }
-  
-  return response.json();
-}
 
-// Profile API
-export async function getProfile(userId: string): Promise<UserProfile> {
-  const response = await fetch(`${API_BASE_URL}/profile/${userId}`);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch profile');
-  }
-  
-  return response.json();
-}
+// Profile APIs
+export const getProfile = (userId: string) =>
+  fetchApi(`/profile/${userId}`);
 
-export async function updateProfile(userId: string, profile: Partial<UserProfile>): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/profile/${userId}`, {
+export const updateProfile = (userId: string, profileData: any) =>
+  fetchApi(`/profile/${userId}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(profile),
+    body: JSON.stringify(profileData),
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to update profile');
-  }
-}
 
-// Jobs API
-export async function getJobRecommendations(userId: string, limit: number = 10): Promise<Job[]> {
-  const response = await fetch(`${API_BASE_URL}/jobs/recommendations/${userId}?limit=${limit}`);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch job recommendations');
-  }
-  
-  const data = await response.json();
-  return data.jobs || [];
-}
+// Job APIs
+export const getJobRecommendations = (userId: string, limit: number = 10) =>
+  fetchApi(`/jobs/recommendations/${userId}?limit=${limit}`);
 
-// AI Service API
-export async function uploadResume(file: File): Promise<any> {
+// AI Service APIs (direct to Python service)
+export const extractCV = (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
   
-  const response = await fetch(`${AI_SERVICE_URL}/agents/upload-resume`, {
+  return fetch(`${AI_SERVICE_URL}/agents/extract-cv`, {
     method: 'POST',
     body: formData,
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to upload resume');
-  }
-  
-  return response.json();
-}
+  }).then(r => r.json());
+};
 
-export async function extractCVData(file: File): Promise<any> {
+export const autofillCV = (textContent: string) => {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('text_content', textContent);
   
-  const response = await fetch(`${AI_SERVICE_URL}/agents/extract-cv`, {
+  return fetch(`${AI_SERVICE_URL}/agents/autofill`, {
     method: 'POST',
     body: formData,
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to extract CV data');
-  }
-  
-  return response.json();
-}
+  }).then(r => r.json());
+};
 
-export async function getMatchScore(
-  userProfile: any,
-  jobDescription: string,
-  resumeText?: string
-): Promise<MatchScoreResult> {
-  const response = await fetch(`${AI_SERVICE_URL}/agents/match-score`, {
+export const getMatchScore = (userProfile: any, jobDescription: string, resumeText?: string) =>
+  fetch(`${AI_SERVICE_URL}/agents/match-score`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      user_profile: userProfile,
-      job_description: jobDescription,
-      resume_text: resumeText,
+      userProfile,
+      jobDescription,
+      resumeText,
     }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to get match score');
-  }
-  
-  return response.json();
-}
+  }).then(r => r.json());
 
-export async function tailorResume(
-  originalResume: string,
-  jobDescription: string,
-  userProfile: any,
-  style: string = 'professional',
-  tone: string = 'professional',
-  length: string = 'standard'
-): Promise<TailoredResume> {
-  const response = await fetch(`${AI_SERVICE_URL}/agents/tailor-resume`, {
+export const tailorResume = (originalCV: string, jobDescription: string, userProfile: any, style = 'professional') =>
+  fetch(`${AI_SERVICE_URL}/agents/tailor-resume`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      original_resume: originalResume,
-      job_description: jobDescription,
-      user_profile: userProfile,
+      originalCV,
+      jobDescription,
+      userProfile,
       style,
-      tone,
-      length,
+      tone: 'professional',
+      length: 'standard',
     }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to tailor resume');
-  }
-  
-  return response.json();
-}
+  }).then(r => r.json());
 
-export async function generateCoverLetter(
-  userProfile: any,
-  jobDescription: string,
-  companyName: string,
-  hiringManager?: string
-): Promise<{ cover_letter: string; tone: string; word_count: number; keywords_included: string[] }> {
-  const response = await fetch(`${AI_SERVICE_URL}/agents/generate-cover-letter`, {
+export const generateCoverLetter = (jobDescription: string, userProfile: any, companyName?: string) =>
+  fetch(`${AI_SERVICE_URL}/agents/generate-cover-letter`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      user_profile: userProfile,
-      job_description: jobDescription,
-      company_name: companyName,
-      hiring_manager: hiringManager,
+      jobDescription,
+      userProfile,
+      companyName,
     }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to generate cover letter');
-  }
-  
-  return response.json();
-}
+  }).then(r => r.json());
 
-// Neilwe Chatbot API
-export async function chatWithNeilwe(message: string, context?: any): Promise<string> {
-  const response = await fetch(`${AI_SERVICE_URL}/agents/neilwe-chat`, {
+export const neilweChat = (message: string, context?: any, chatHistory?: any[]) =>
+  fetch(`${AI_SERVICE_URL}/agents/neilwe-chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message,
-      context: context || {},
+      context,
+      chatHistory,
     }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to get response from Neilwe');
-  }
-  
-  const data = await response.json();
-  return data.response;
-}
-
-// Google Careers API (mock for now - would need actual API key)
-export async function searchGoogleCareers(_query: string, location: string): Promise<Job[]> {
-  // This would integrate with Google Careers API
-  // For now, return mock data
-  return [
-    {
-      id: '1',
-      title: 'Software Engineer',
-      company: 'Google',
-      location: location || 'Mountain View, CA',
-      applicationUrl: 'https://careers.google.com',
-      matchScore: 0.92,
-    },
-    {
-      id: '2',
-      title: 'Senior Software Engineer',
-      company: 'Google',
-      location: location || 'New York, NY',
-      applicationUrl: 'https://careers.google.com',
-      matchScore: 0.88,
-    },
-  ];
-}
+  }).then(r => r.json());

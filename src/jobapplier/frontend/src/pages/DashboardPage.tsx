@@ -15,80 +15,44 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getJobRecommendations, neilweChat } from '@/lib/api';
 import type { Job, ChatMessage } from '@/types';
 
-// Mock job data for demo
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Graduate Software Engineer',
-    company: 'EY',
-    location: 'Johannesburg, South Africa',
-    applicationUrl: 'https://careers.ey.com',
-    matchScore: 0.92,
-    description: 'Join our technology team and work on cutting-edge projects...',
-  },
-  {
-    id: '2',
-    title: 'Agentic Engineer',
-    company: 'Deloitte',
-    location: 'Johannesburg, South Africa',
-    applicationUrl: 'https://careers.deloitte.com',
-    matchScore: 0.88,
-    description: 'Build intelligent AI agents and automation systems...',
-  },
-  {
-    id: '3',
-    title: 'Junior Automation Engineer',
-    company: 'Lectra',
-    location: 'Paris, France (Remote)',
-    applicationUrl: 'https://careers.lectra.com',
-    matchScore: 0.85,
-    description: 'Automate manufacturing processes and workflows...',
-  },
-  {
-    id: '4',
-    title: 'Full Stack Developer',
-    company: 'Google',
-    location: 'Mountain View, CA (Remote)',
-    applicationUrl: 'https://careers.google.com',
-    matchScore: 0.83,
-    description: 'Build scalable web applications...',
-  },
-];
 
 export default function DashboardPage() {
   const { user, jobPreferences, chatMessages, addChatMessage, setRecommendedJobs } = useApp();
-  const [jobs, setJobs] = useState<Job[]>(mockJobs);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
-  const [isJobsLoading, setIsJobsLoading] = useState(false);
+  const [isJobsLoading, setIsJobsLoading] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch job recommendations on mount
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if(user?.id){
+      fetchRealJobs();
+    }
+  }, [user?.id]);
 
   // Scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
-
-  const fetchJobs = async () => {
+  const fetchRealJobs = async () => {
     setIsJobsLoading(true);
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setJobs(mockJobs);
-      setRecommendedJobs(mockJobs);
+      const data = await getJobRecommendations(user!.id, 10);
+      setJobs(data.jobs || []);
+      setRecommendedJobs(data.jobs || []);
     } catch (error: any) {
       toast.error('Failed to load job recommendations');
+      // Fallback to empty, not mock
+      setJobs([]);
     } finally {
       setIsJobsLoading(false);
     }
   };
-
+  
   const handleSendMessage = async () => {
     if (!chatInput.trim()) return;
 
@@ -102,35 +66,31 @@ export default function DashboardPage() {
     setIsChatLoading(true);
 
     try {
-      // Simulate API delay and response
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      let response = '';
-      const lowerMsg = userMessage.content.toLowerCase();
-      
-      if (lowerMsg.includes('job') || lowerMsg.includes('position')) {
-        response = `I found ${jobs.length} jobs matching your profile! The top match is "${jobs[0].title}" at ${jobs[0].company} with a ${Math.round(jobs[0].matchScore * 100)}% match score. Would you like me to help you apply for this position?`;
-      } else if (lowerMsg.includes('interview')) {
-        response = 'I can help you prepare for interviews! Here are some tips:\n\n1. Research the company thoroughly\n2. Practice the STAR method for behavioral questions\n3. Prepare questions to ask the interviewer\n4. Review the job description and align your experience\n\nWould you like me to simulate a mock interview?';
-      } else if (lowerMsg.includes('resume') || lowerMsg.includes('cv')) {
-        response = 'I can help optimize your resume! Go to the Dashboard tab to:\n\n- Get ATS scores\n- Tailor your resume for specific jobs\n- See improvement suggestions\n\nWould you like me to analyze a specific job description against your profile?';
-      } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
-        response = `Hello ${user?.name || 'there'}! I'm Neilwe, your AI career assistant. I can help you:\n\n- Find jobs where you're a top candidate\n- Prepare for interviews\n- Optimize your resume\n- Navigate the platform\n\nWhat would you like help with today?`;
-      } else {
-        response = 'I understand! I can help you with various career-related tasks. Feel free to ask me about:\n\n- Job recommendations\n- Interview preparation\n- Resume optimization\n- Career advice\n- Specific companies or roles\n\nWhat would you like to know?';
-      }
+      const response = await neilweChat(
+        userMessage.content,
+        {
+          userProfile: user,
+          jobPreferences,
+          recentJobs: jobs.slice(0, 3),
+        },
+        chatMessages.slice(-5)
+      );
 
       addChatMessage({
         role: 'assistant',
-        content: response,
+        content: response.response,
       });
     } catch (error: any) {
       toast.error('Failed to get response from Neilwe');
+      addChatMessage({
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+      });
     } finally {
       setIsChatLoading(false);
     }
   };
-
+ 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

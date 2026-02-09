@@ -2,11 +2,13 @@ package jobapplier.api.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -29,13 +31,13 @@ public class AIController {
     public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
         try {
             String msg = request.message() == null ? "" : request.message();
-            if(msg.contains("talior") || msg.contains("cv")|| msg.contains("resume")){
+            if(msg.contains("tailor") || msg.contains("cv") || msg.contains("resume")){
                 return ResponseEntity.ok(Map.of(
                     "response", 
                     "Got it! Please paste the job description and confirm which resume to use.",
                     "timestamp", System.currentTimeMillis(),
-                    "action",
-                    "TAILOR_RESUME"));
+                    "action", "TAILOR_RESUME"
+                ));
             }
             return ResponseEntity.ok(Map.of(
                 "response", 
@@ -51,7 +53,6 @@ public class AIController {
     @PostMapping("/match-score")
     public ResponseEntity<?> getMatchScore(@RequestBody MatchScoreRequest request) {
         try {
-            // Call AI service for match score
             String url = aiServiceUrl + "/agents/match-score";
             
             HttpHeaders headers = new HttpHeaders();
@@ -65,7 +66,6 @@ public class AIController {
             
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
-            // Return mock data if AI service is unavailable
             return ResponseEntity.status(503).body(Map.of("error", "AI service unavailable: " + e.getMessage()));
         }
     }
@@ -112,28 +112,68 @@ public class AIController {
         }
     }
 
+    /**
+     * Upload resume and extract CV data
+     * Changed endpoint from /agents/upload-resume to /agents/extract-cv
+     * Fixed ByteArrayResource usage with proper filename
+     */
     @PostMapping("/upload-resume")
-    public ResponseEntity<?> uploadResume(@RequestParam("file") MultipartFile file) {
+public ResponseEntity<?> uploadResume(@RequestParam("file") MultipartFile file) {
     try {
-        String url = aiServiceUrl + "/agents/upload-resume";
+        // FIXED: Correct endpoint is /agents/extract-cv
+        String url = aiServiceUrl + "/agents/extract-cv";
 
-        var headers = new HttpHeaders();
+        // Read file bytes
+        byte[] fileBytes = file.getBytes();
+        
+        // Create ByteArrayResource with proper filename
+        ByteArrayResource fileResource = new ByteArrayResource(fileBytes) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
+
+        // Build multipart request
+        HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        var body = new org.springframework.util.LinkedMultiValueMap<String, Object>();
-        body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
-        @Override public String getFilename() { return file.getOriginalFilename(); }
-        });
+        // Use LinkedMultiValueMap for multipart data
+        org.springframework.util.LinkedMultiValueMap<String, Object> body = 
+            new org.springframework.util.LinkedMultiValueMap<>();
+        body.add("file", fileResource);
 
-        var entity = new HttpEntity<>(body, headers);
+        HttpEntity<org.springframework.util.LinkedMultiValueMap<String, Object>> entity = 
+            new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
-        return ResponseEntity.ok(response.getBody());
+        // FIXED: Use postForEntity with String.class to capture JSON response
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            url, 
+            entity, 
+            String.class
+        );
+
+        // Parse the JSON string back to a Map and return it
+        if (response.getBody() != null) {
+            Map<String, Object> responseBody = objectMapper.readValue(
+                response.getBody(), 
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}
+            );
+            return ResponseEntity.ok(responseBody);
+        } else {
+            return ResponseEntity.status(500).body(Map.of("error", "Empty response from AI service"));
+        }
+        
+    } catch (IOException e) {
+        return ResponseEntity.status(500).body(Map.of(
+            "error", "Failed to read file: " + e.getMessage()
+        ));
     } catch (Exception e) {
-        return ResponseEntity.status(500).body(Map.of("error", "Upload failed: " + e.getMessage()));
+        return ResponseEntity.status(500).body(Map.of(
+            "error", "Upload failed: " + e.getMessage()
+        ));
     }
-    }
-
+}
 
     @GetMapping("/health")
     public ResponseEntity<?> healthCheck() {

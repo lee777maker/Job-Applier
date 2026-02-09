@@ -43,14 +43,41 @@ export interface Certification {
 
 export interface UserProfile {
   id: string;
-  contactInfo: ContactInfo;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-  projects: Project[];
-  certifications: Certification[];
-  resumeUrl?: string;
-  resumeText?: string;
+  contactInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+  };
+  experience: Array<{
+    id: string;
+    title: string;
+    company: string;
+    duration: string;
+    description: string;
+  }>;
+  education: Array<{
+    id: string;
+    degree: string;
+    institution: string;
+    field: string;
+    duration: string;
+    gpa?: string;
+  }>;
+  projects: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+  skills: Array<string | { name: string; level?: string }>;
+  certifications: Array<{
+    id: string;
+    name: string;
+    link?: string;
+  }>;
+  resumeFileName?: string;
+  resumeUploadedAt?: string;
+  resumeText?: string;  // If you store parsed resume text
 }
 
 // Job Types
