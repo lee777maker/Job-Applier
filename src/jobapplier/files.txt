@@ -1,5 +1,23 @@
 .
+├── .DS_Store
+├── .env
+├── .github
+│   └── appmod
+│       └── appcat
+├── .gitignore
+├── .pids
 ├── ai-service
+│   ├── .dockerignore
+│   ├── .DS_Store
+│   ├── .env
+│   ├── .gcloudignore
+│   ├── .pytest_cache
+│   │   ├── .gitignore
+│   │   ├── CACHEDIR.TAG
+│   │   ├── README.md
+│   │   └── v
+│   │       └── cache
+│   │           └── nodeids
 │   ├── app.py
 │   ├── config.py
 │   ├── Dockerfile
@@ -8,6 +26,7 @@
 │   │   ├── contact.py
 │   │   ├── llm.py
 │   │   └── sections.py
+│   ├── jobspy_service.py
 │   ├── load_health.py
 │   ├── models.py
 │   ├── patterns.py
@@ -16,22 +35,36 @@
 │   ├── services
 │   │   └── cv_extraction.py
 │   ├── smoke_test.py
+│   ├── test_cv.txt
+│   ├── test_extraction.py
 │   └── tests
 │       └── test_api.py
 ├── backend
+│   ├── .dockerignore
+│   ├── .DS_Store
+│   ├── .mvn
+│   │   └── wrapper
+│   │       └── maven-wrapper.properties
 │   ├── Dockerfile
 │   ├── mvnw
 │   ├── mvnw.cmd
 │   ├── pom.xml
 │   └── src
+│       ├── .DS_Store
 │       ├── main
+│       │   ├── .DS_Store
 │       │   ├── java
+│       │   │   ├── .DS_Store
 │       │   │   └── jobapplier
+│       │   │       ├── .DS_Store
 │       │   │       ├── ai
+│       │   │       │   ├── .DS_Store
 │       │   │       │   ├── AIClient.java
 │       │   │       │   ├── AIResult.java
 │       │   │       │   └── AIStatus.java
 │       │   │       ├── api
+│       │   │       │   ├── .DS_Store
+│       │   │       │   ├── JobSpyClient.java
 │       │   │       │   ├── Manager.java
 │       │   │       │   └── rest
 │       │   │       │       ├── AIController.java
@@ -58,14 +91,16 @@
 │       │   │       │   ├── ApplicationRepository.java
 │       │   │       │   ├── JobRepository.java
 │       │   │       │   ├── TaskRepository.java
-│       │   │       │   ├── UserRepository.java
-│       │   │       │   └── UserRepositoryJdbc.java
+│       │   │       │   └── UserRepository.java
 │       │   │       └── workflow
 │       │   │           └── ApplicationStatus.java
 │       │   ├── recommendation
 │       │   │   ├── JobRecommender.java
 │       │   │   └── JobRecommenderImpl.java
 │       │   └── resources
+│       │       ├── .DS_Store
+│       │       ├── application-dev.properties
+│       │       ├── application-gcp.properties
 │       │       ├── application.properties
 │       │       └── schema.sql
 │       └── test
@@ -77,20 +112,27 @@
 ├── docker-compose.yml
 ├── files.txt
 ├── frontend
+│   ├── .dockerignore
+│   ├── .DS_Store
 │   ├── components.json
 │   ├── Dockerfile
 │   ├── eslint.config.js
 │   ├── index.html
+│   ├── nginx.conf
 │   ├── package-lock.json
 │   ├── package.json
 │   ├── postcss.config.js
 │   ├── README.md
 │   ├── src
+│   │   ├── .DS_Store
 │   │   ├── App.css
 │   │   ├── App.tsx
 │   │   ├── components
+│   │   │   ├── .DS_Store
 │   │   │   ├── custom
-│   │   │   │   └── Navigation.tsx
+│   │   │   │   ├── DocumentEditor.tsx
+│   │   │   │   ├── Navigation.tsx
+│   │   │   │   └── SortableSection.tsx
 │   │   │   └── ui
 │   │   │       ├── accordion.tsx
 │   │   │       ├── alert-dialog.tsx
@@ -170,6 +212,9 @@
 │   ├── tsconfig.node.json
 │   └── vite.config.ts
 ├── logs
+│   ├── ai-service.log
+│   ├── backend.log
+│   └── frontend.log
 └── start.sh
 
-36 directories, 137 files
+45 directories, 173 files

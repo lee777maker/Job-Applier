@@ -18,7 +18,6 @@ import { toast } from 'sonner';
 import { getJobRecommendations, neilweChat } from '@/lib/api';
 import type { Job, ChatMessage } from '@/types';
 
-
 export default function DashboardPage() {
   const { user, jobPreferences, chatMessages, addChatMessage, setRecommendedJobs } = useApp();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -27,31 +26,67 @@ export default function DashboardPage() {
   const [isJobsLoading, setIsJobsLoading] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch job recommendations on mount
   useEffect(() => {
     if(user?.id){
-      fetchRealJobs();
+      fetchJobs();
     }
   }, [user?.id]);
 
-  // Scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
-  const fetchRealJobs = async () => {
-    setIsJobsLoading(true);
-    try {
-      const data = await getJobRecommendations(user!.id, 10);
-      setJobs(data.jobs || []);
-      setRecommendedJobs(data.jobs || []);
-    } catch (error: any) {
-      toast.error('Failed to load job recommendations');
-      // Fallback to empty, not mock
-      setJobs([]);
-    } finally {
-      setIsJobsLoading(false);
+
+  const fetchJobs = async () => {
+  setIsJobsLoading(true);
+  try {
+    if(!user?.id){
+      console.error("DEBUG: No user ID found");
+      toast.error('User not found');
+      return;
     }
-  };
+    
+    console.log("DEBUG: Fetching jobs for user:", user.id);
+    
+    const response = await fetch(`/api/jobs/recommendations/${user.id}`);
+    console.log("DEBUG: Response status:", response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("DEBUG: Error response:", errorText);
+      throw new Error('Failed to fetch job recommendations');
+    }
+    
+    const result = await response.json();
+    console.log("DEBUG: Full API response:", result);
+    console.log("DEBUG: Jobs array:", result.jobs);
+    console.log("DEBUG: Number of jobs:", result.jobs?.length);
+    
+    if (!result.jobs || result.jobs.length === 0) {
+      console.warn("DEBUG: No jobs returned from API");
+    }
+
+    const mappedJobs: Job[] = result.jobs.map((job: any) => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      applicationUrl: job.applicationUrl,
+      matchScore: job.matchScore,
+      postedAt: job.postedAt,
+      jobType: job.jobType
+    }));
+
+    console.log("DEBUG: Mapped jobs:", mappedJobs);
+    setJobs(mappedJobs);
+    setRecommendedJobs(mappedJobs);
+    
+  } catch (error) {
+    console.error("DEBUG: Fetch error:", error);
+    toast.error('Failed to load jobs');
+  } finally {
+    setIsJobsLoading(false);
+  }
+};  
   
   const handleSendMessage = async () => {
     if (!chatInput.trim()) return;
@@ -144,7 +179,6 @@ export default function DashboardPage() {
                             </span>
                           </div>
                           
-                          {/* Match Score */}
                           <div className="flex items-center gap-2 mt-3">
                             <div className="flex items-center gap-1">
                               <TrendingUp className="w-4 h-4 text-primary" />
@@ -161,7 +195,6 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        {/* Apply Button */}
                         <a
                           href={job.applicationUrl}
                           target="_blank"
@@ -178,24 +211,24 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Right Column - Neilwe Chatbot */}
+          {/* Right Column - Neilwe Chatbot - FIXED */}
           <div className="lg:col-span-1">
-            <Card className="bg-card border-border h-[calc(100vh-12rem)] flex flex-col">
-              <CardContent className="p-4 flex flex-col h-full">
-                {/* Chat Header */}
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Neilwe</h3>
-                    <p className="text-xs text-muted-foreground">Your AI assistant</p>
-                  </div>
+            <Card className="bg-card border-border flex flex-col h-[calc(100vh-8rem)]">
+              {/* Chat Header - Fixed at top */}
+              <div className="flex items-center gap-3 p-4 border-b border-border flex-shrink-0">
+                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
                 </div>
+                <div>
+                  <h3 className="font-semibold">Neilwe</h3>
+                  <p className="text-xs text-muted-foreground">Your AI assistant</p>
+                </div>
+              </div>
 
-                {/* Chat Messages */}
-                <ScrollArea className="flex-1 py-4">
-                  <div className="space-y-4">
+              {/* Chat Messages - Scrollable area */}
+              <div className="flex-1 overflow-hidden relative">
+                <ScrollArea className="h-full w-full">
+                  <div className="p-4 space-y-4">
                     {chatMessages.map((message, index) => (
                       <div
                         key={index}
@@ -204,10 +237,10 @@ export default function DashboardPage() {
                         }`}
                       >
                         <div
-                          className={`max-w-[85%] whitespace-pre-wrap ${
+                          className={`max-w-[80%] break-words whitespace-pre-wrap px-4 py-3 rounded-2xl ${
                             message.role === 'user'
-                              ? 'chat-message-user'
-                              : 'chat-message-assistant'
+                              ? 'bg-primary text-primary-foreground rounded-br-md'
+                              : 'bg-secondary text-foreground rounded-bl-md'
                           }`}
                         >
                           {message.content}
@@ -216,7 +249,7 @@ export default function DashboardPage() {
                     ))}
                     {isChatLoading && (
                       <div className="flex justify-start">
-                        <div className="chat-message-assistant flex items-center gap-2">
+                        <div className="bg-secondary text-foreground rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] flex items-center gap-2">
                           <div className="flex gap-1">
                             <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                             <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -228,28 +261,28 @@ export default function DashboardPage() {
                     <div ref={chatEndRef} />
                   </div>
                 </ScrollArea>
+              </div>
 
-                {/* Chat Input */}
-                <div className="pt-4 border-t border-border">
-                  <div className="relative">
-                    <Input
-                      placeholder="What would you like to know?"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      className="input-dark pr-12"
-                      disabled={isChatLoading}
-                    />
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={!chatInput.trim() || isChatLoading}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 p-0 bg-primary hover:bg-primary/90 rounded-lg"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
+              {/* Chat Input - Fixed at bottom */}
+              <div className="p-4 border-t border-border flex-shrink-0">
+                <div className="relative">
+                  <Input
+                    placeholder="What would you like to know?"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="input-dark pr-12"
+                    disabled={isChatLoading}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!chatInput.trim() || isChatLoading}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 p-0 bg-primary hover:bg-primary/90 rounded-lg"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
         </div>

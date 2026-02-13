@@ -29,7 +29,7 @@ interface AppContextType extends AppState {
   logout: () => void;
   
   // Profile actions
-  setProfile: (profile: UserProfile) => void;
+  setProfile: (profile: UserProfile | null) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
   
   // Job Preferences actions
@@ -114,7 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(defaultState);
   };
 
-  const setProfile = (profile: UserProfile) => {
+  const setProfile = (profile: UserProfile | null) => {
     setState(prev => ({ ...prev, profile }));
   };
 

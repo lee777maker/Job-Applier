@@ -1,7 +1,7 @@
 // frontend/src/lib/api.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || '/ai';
 
 // Helper for API calls
 async function fetchApi(endpoint: string, options: RequestInit = {}, baseUrl: string = API_BASE_URL) {

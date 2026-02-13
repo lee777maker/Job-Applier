@@ -78,6 +78,7 @@ export interface UserProfile {
   resumeFileName?: string;
   resumeUploadedAt?: string;
   resumeText?: string;  // If you store parsed resume text
+  resumeBase64?: string; // If you want to store the base64 string for viewing
 }
 
 // Job Types

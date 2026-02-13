@@ -53,3 +53,8 @@ CREATE UNIQUE INDEX idx_resume_user ON resumes(user_id);
 CREATE INDEX idx_app_user_id ON applications(user_id);
 CREATE INDEX idx_app_job_id ON applications(job_id);
 CREATE INDEX idx_users_email ON users(email);
+
+-- Schema updates for user profile and resume management
+ALTER TABLE users ADD COLUMN profile_data TEXT;
+ALTER TABLE users ADD COLUMN resume_file_name VARCHAR(255);
+ALTER TABLE users ADD COLUMN resume_uploaded_at TIMESTAMP;

@@ -1,0 +1,28 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+dist/
+build/
+
+# Java/Maven/Gradle
+target/
+.gradle/
+build/
+
+# Docker / misc
+.git/
+.DS_Store
+*.log
+
+# Large artifacts
+*.zip
+*.tar
+*.gz
+*.sqlite
+

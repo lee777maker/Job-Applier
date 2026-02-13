@@ -6,11 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, X, Loader2, CheckCircle2} from 'lucide-react';
 import { toast } from 'sonner';
-import { extractCV } from '@/lib/api';
+import { extractCV, updateProfile } from '@/lib/api';
 
 export default function CVUploadPage() {
   const navigate = useNavigate();
-  const { setUploadedCV, setProfile } = useApp();
+  const { setUploadedCV, setProfile, user} = useApp();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -83,18 +83,33 @@ const handleUpload = async () => {
       setUploadProgress(prev => (prev >= 90 ? 90 : prev + 10));
     }, 200);
 
-    // REAL API CALL - Extract CV
+    //API CALL - Extract CV
     const extractedData = await extractCV(file);
     
     clearInterval(progressInterval);
     setUploadProgress(100);
+    //Get user info from context/signup
+  
 
+    const firstName = extractedData.contactInfo?.firstName || user?.name || '';
+    const lastName = extractedData.contactInfo?.lastName || user?.surname|| '' ;
     // Create profile from extracted data
+    const fileToBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+    };
+
+    const resumeBase64 = await fileToBase64(file);
+    if(!user?.id){ toast.error('User not authenticated. Please log in again.'); setIsUploading(false); return;}
     const profile = {
-      id: 'profile-' + Date.now(),
+      id: user.id,
       contactInfo: {
-        firstName: extractedData.contactInfo?.firstName || '',
-        lastName: extractedData.contactInfo?.lastName || '',
+        firstName: firstName,
+        lastName: lastName,
         email: extractedData.contactInfo?.email || '',
         phoneNumber: extractedData.contactInfo?.phone || '',
       },
@@ -121,8 +136,9 @@ const handleUpload = async () => {
       resumeText: extractedData.rawText || '',
       resumeFileName: file.name,
       resumeUploadedAt: new Date().toISOString(),
+      resumeBase64: resumeBase64,
     };
-
+    if(user?.id){ await updateProfile(user.id, profile)};
     setProfile(profile);
     setExtractionComplete(true);
     toast.success('CV uploaded and analyzed successfully!');

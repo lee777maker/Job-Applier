@@ -29,6 +29,10 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Resume resume;
 
+    @Column(name = "profile_data", columnDefinition = "TEXT")
+    private String profileData; // Store JSON string
+
+
     protected User() {
         // JPA needs a no-args constructor
     }
@@ -107,6 +111,10 @@ public class User {
     public String getPasswordHash() {return passwordHash;}
     public boolean isEnabled(){return enabled;}
     public Resume getResume(){return resume;}
+
+
+    public String getProfileData() { return profileData; }
+    public void setProfileData(String profileData) { this.profileData = profileData; }
 
     private static <T> T require(T v, String field) {
         if (v == null) throw new IllegalArgumentException(field + " cannot be null");

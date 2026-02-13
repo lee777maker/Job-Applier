@@ -1,32 +1,32 @@
-FROM eclipse-temurin:21-jdk
+# Build stage
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests -B
 
+# Runtime stage - Ubuntu Jammy (glibc compatible)
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-  && rm -rf /var/lib/apt/lists/*
+# Install glibc compatibility for ARM64
+RUN apt-get update && apt-get install -y \
+    libc6 \
+    libstdc++6 \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
+COPY --from=build /app/target/*.jar app.jar
 
-# Copy Maven wrapper and pom
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
+# Create non-root user
+RUN useradd -m -s /bin/bash spring
+USER spring:spring
 
-# Download dependencies
-RUN ./mvnw dependency:go-offline -B
+ENV PORT=8080
+EXPOSE ${PORT}
 
-# Copy source code
-COPY src src
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/actuator/health || exit 1
 
-# Build the application
-RUN ./mvnw clean package -DskipTests
-
-# Expose port
-EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/api/ai/health || exit 1
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "target/jobapplier-backend-1.0.0.jar"]
+ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT} -jar app.jar"]

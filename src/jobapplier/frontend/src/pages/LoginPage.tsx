@@ -26,22 +26,21 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      // For demo purposes, simulate login
-      // In production, this would call the actual API
-      // const user = await login(email, password);
-      
-      // Mock login for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockUser = {
-        id: 'user-1',
-        email,
-        name: 'Lethabo',
-        surname: 'Neo',
-      };
-      
-      loginUser(mockUser);
-      toast.success('Welcome back!');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+      const userData = await response.json();
+      loginUser(userData);
       navigate('/dashboard');
+      
+      toast.success('Welcome back!');
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
     } finally {

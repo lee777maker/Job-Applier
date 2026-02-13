@@ -122,7 +122,7 @@ public class Manager {
     public void submitApplication(User user, Application app) {
         if (!app.isReadyForSubmission()) {
             app.setStatus(ApplicationStatus.PARTIAL_ACTION_REQUIRED);
-            applicationRepo.update(app);
+            applicationRepo.save(app);
 
             auditService.log(
                     "SUBMISSION_BLOCKED",
@@ -148,7 +148,7 @@ public class Manager {
             );
         }
 
-        applicationRepo.update(app);
+        applicationRepo.save(app);
     }
 
     /* =========================
@@ -173,8 +173,8 @@ public class Manager {
             }
         }
 
-        taskRepo.update(task);
-        applicationRepo.update(app);
+        taskRepo.save(task);
+        applicationRepo.save(app);
     }
     /* =========================
        Job RECOMMENDATION

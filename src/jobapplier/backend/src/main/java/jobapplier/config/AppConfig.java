@@ -18,60 +18,8 @@ public class AppConfig {
     @Value("${ai.service.url:http://localhost:8001}")
     private String aiServiceUrl;
 
-    // @Bean
-    // public UserRepository userRepository() {
-    //     return new UserRepositoryJdbc();
-    // }
-
-    @Bean
-    public JobRepository jobRepository() {
-        return new JobRepository() {
-            // In-memory implementation for now
-            @Override
-            public void save(jobapplier.model.Job job) {}
-            
-            @Override
-            public jobapplier.model.Job findById(java.util.UUID id) { return null; }
-            
-            @Override
-            public java.util.List<jobapplier.model.Job> findAll() { 
-                return new java.util.ArrayList<>(); 
-            }
-        };
-    }
-
-    @Bean
-    public ApplicationRepository applicationRepository() {
-        return new ApplicationRepository() {
-            @Override
-            public void save(jobapplier.model.Application app) {}
-            
-            @Override
-            public void update(jobapplier.model.Application app) {}
-            
-            @Override
-            public jobapplier.model.Application findById(java.util.UUID id) { return null; }
-            
-            @Override
-            public java.util.List<jobapplier.model.Application> findByUserId(java.util.UUID userId) {
-                return new java.util.ArrayList<>();
-            }
-        };
-    }
-
-    @Bean
-    public TaskRepository taskRepository() {
-        return new TaskRepository() {
-            @Override
-            public void save(jobapplier.model.Task task) {}
-            
-            @Override
-            public void update(jobapplier.model.Task task) {}
-            
-            @Override
-            public jobapplier.model.Task findById(java.util.UUID id) { return null; }
-        };
-    }
+    // Repositories are now auto-implemented by Spring Data JPA
+    // No need to define them as beans here
 
     @Bean
     public AuditService auditService() {

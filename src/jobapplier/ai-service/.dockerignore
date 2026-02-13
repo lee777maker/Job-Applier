@@ -1,38 +1,11 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-.env
-.venv/
-venv/
-ENV/
-env/
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
+.git
+**/.DS_Store
+**/__pycache__/
+**/*.pyc
+venv
+.venv
+node_modules
+target
+dist
+build
 
-# Model files (download in container instead)
-*.bin
-*.safetensors
-models/
-sentence_transformers/
-
-# Git
-.git/
-.gitignore
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-logs/
-
-# Test files
-tests/
-test_*.py

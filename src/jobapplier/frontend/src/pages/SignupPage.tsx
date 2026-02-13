@@ -26,7 +26,7 @@ export default function SignupPage() {
       [e.target.name]: e.target.value,
     }));
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -50,15 +50,28 @@ export default function SignupPage() {
     
     try {
       // Mock signup for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockUser = {
-        id: 'user-' + Date.now(),
-        email: formData.email,
-        name: formData.name,
-        surname: formData.surname,
-      };
-      
-      loginUser(mockUser);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          surname: formData.surname,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Signup failed');
+      }
+      const userData = await response.json();
+      loginUser({
+        id: userData.id.toString(), // Ensure ID is a string
+        email: userData.email,
+        name: userData.name,
+        surname: userData.surname,
+      });
       toast.success('Account created successfully!');
       navigate('/upload-cv');
     } catch (error: any) {

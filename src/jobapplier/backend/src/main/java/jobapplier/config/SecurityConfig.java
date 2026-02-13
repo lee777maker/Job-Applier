@@ -1,52 +1,60 @@
 package jobapplier.config;
 
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for APIs + H2 console
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers(
-                    "/h2-console/**",
-                    "/api/**",
-                    "/actuator/**"
-                )
-            )
-
-            // Allow H2 console to render in browser
-            .headers(headers -> headers
-                .frameOptions(frame -> frame.disable())
-            )
-
-            // Authorization rules
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // --- PUBLIC / DIAGNOSTIC (DEV / DOCKER) ---
                 .requestMatchers(
+                    "/api/auth/**",
                     "/api/ai/health",
                     "/api/ai/upload-resume",
                     "/api/profile/**",
+                    "/api/jobs/recommendations/**",
                     "/actuator/health",
                     "/actuator/info",
-                    "/h2-console/**"
+                    "/h2-console/**",
+                    "/error"  // ADD THIS to allow error responses
                 ).permitAll()
-
-                // --- EVERYTHING ELSE ---
                 .anyRequest().authenticated()
-            )
-
-            // Simple HTTP Basic for now
-            .httpBasic(Customizer.withDefaults());
-
+            );
+        
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:8080"
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

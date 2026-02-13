@@ -1,11 +1,11 @@
 package jobapplier.repository;
 
 import jobapplier.model.Job;
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
-public interface JobRepository {
-    void save(Job job);
-    Job findById(UUID id);
-    List<Job> findAll();
+@Repository
+public interface JobRepository extends JpaRepository<Job, UUID> {
+    // Spring Data provides save(), findById(), findAll() automatically
 }

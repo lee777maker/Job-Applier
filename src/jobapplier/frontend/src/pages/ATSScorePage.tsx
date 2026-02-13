@@ -22,7 +22,7 @@ import {
 import { toast } from 'sonner';
 import { getMatchScore, tailorResume, generateCoverLetter } from '@/lib/api';
 import type { MatchScoreResult, TailoredResume } from '@/types';
-
+import { DocumentEditor } from '@/components/custom/DocumentEditor';
 export default function ATSScorePage() {
   const { profile } = useApp();
   const [cvText, setCvText] = useState(profile?.resumeText || '');
@@ -357,6 +357,19 @@ export default function ATSScorePage() {
                           <p>No resume content yet</p>
                           <p className="text-sm">Enter your CV in the Edit tab</p>
                         </div>
+                      )}
+                      {tailoredResume && (
+                        <DocumentEditor 
+                          initialContent={tailoredResume.tailored_resume} 
+                          documentType="cv"
+                        />
+
+                      )}
+                      {coverLetter && (
+                        <DocumentEditor 
+                          initialContent={coverLetter} 
+                          documentType="cover-letter"
+                        />
                       )}
                     </ScrollArea>
                   </CardContent>

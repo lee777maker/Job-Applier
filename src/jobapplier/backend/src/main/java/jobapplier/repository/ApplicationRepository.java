@@ -1,12 +1,12 @@
 package jobapplier.repository;
 
 import jobapplier.model.Application;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
-public interface ApplicationRepository {
-    void save(Application app);
-    void update(Application app);
-    Application findById(UUID id);
+@Repository
+public interface ApplicationRepository extends JpaRepository<Application, UUID> {
     List<Application> findByUserId(UUID userId);
 }

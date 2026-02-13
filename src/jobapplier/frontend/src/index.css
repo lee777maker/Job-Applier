@@ -227,3 +227,10 @@
 .spinner {
   @apply w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin;
 }
+.chat-message-user {
+  @apply bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%] break-words whitespace-pre-wrap;
+}
+
+.chat-message-assistant {
+  @apply bg-secondary text-foreground rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] break-words whitespace-pre-wrap;
+}
