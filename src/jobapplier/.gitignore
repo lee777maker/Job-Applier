@@ -74,3 +74,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+#Google Cloud SDK
+google-cloud-sdk*
+*.tar.gz
+*.zip
