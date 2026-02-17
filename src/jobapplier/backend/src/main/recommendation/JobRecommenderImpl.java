@@ -4,64 +4,74 @@ import jobapplier.model.User;
 import jobapplier.model.Job;
 import jobapplier.repository.JobRepository;
 import jobapplier.ai.AIClient;
+import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JobRecommenderImpl implements JobRecommender {
     
     private final JobRepository jobRepository;
-    private final AIClient aiClient; // For AI-powered matching
+    private final AIClient aiClient;
+    private final WebClient webClient; // ADD THIS FIELD
     
-    public JobRecommenderImpl(JobRepository jobRepository, AIClient aiClient) {
+    public JobRecommenderImpl(JobRepository jobRepository, AIClient aiClient, WebClient webClient) {
         this.jobRepository = jobRepository;
         this.aiClient = aiClient;
+        this.webClient = webClient; // INITIALIZE
     }
     
     @Override
     public List<JobMatch> recommendJobs(User user, int limit) {
-        // In V1: Simple keyword matching
-        // In future: Integrate with AI for semantic matching
-        
-        List<JobMatch> recommendations = new ArrayList<>();
-        
-        // TODO: Get all jobs from repository
-        // For now, return empty list - you'll need to implement job fetching
-        // and matching logic
-        
-        // Example logic:
-        // 1. Extract skills from user profile (need to add skills to User model)
-        // 2. Fetch all available jobs
-        // 3. Calculate match score based on skills overlap
-        // 4. Sort by score and return top N
-        
-        return recommendations.stream()
-                .sorted(Comparator.comparingDouble(JobMatch::matchScore).reversed())
-                .limit(limit)
-                .toList();
+        try {
+            // Call jobspy-service with profile data
+            Map<String, Object> response = webClient.post()
+                .uri("http://jobspy-service:8002/search-by-profile")
+                .bodyValue(Map.of(
+                    "profile", Map.of(
+                        "skills", user.getSkills(),
+                        "suggestedJobTitles", user.getSuggestedJobTitles(),
+                        "location", user.getPreferredLocation()
+                    ),
+                    "preferences", Map.of(
+                        "preferredRole", user.getPreferredRole(),
+                        "openToRemote", user.isOpenToRemote(),
+                        "contractTypes", user.getContractTypes()
+                    ),
+                    "max_results", limit
+                ))
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+                
+            if (response == null || !response.containsKey("jobs")) {
+                return List.of();
+            }
+            
+            List<Map<String, Object>> jobs = (List<Map<String, Object>>) response.get("jobs");
+            return jobs.stream()
+                .map(job -> new JobMatch(
+                    convertToJobEntity(job),
+                    ((Number) job.getOrDefault("match_score", 0.0)).doubleValue(),
+                    (List<String>) job.getOrDefault("matching_skills", List.of())
+                ))
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of(); // Return empty on error
+        }
     }
     
-    private double calculateMatchScore(User user, Job job) {
-        // Simple implementation - count keyword matches
-        // Later: Use AI for semantic matching
-        
-        String userSkills = extractSkillsFromUser(user); // Need to implement
-        String jobDescription = job.getJobDescription().toLowerCase();
-        
-        long matches = userSkills.lines()
-                .filter(skill -> jobDescription.contains(skill.toLowerCase()))
-                .count();
-        
-        return (double) matches / 10.0; // Normalize score 0-1
-    }
-    
-    private String extractSkillsFromUser(User user) {
-        // TODO: Extract skills from user's profile
-        // This could come from:
-        // - Resume parsing
-        // - User-entered skills
-        // - LinkedIn profile integration
-        
-        return "";
+    private Job convertToJobEntity(Map<String, Object> jobData) {
+        // Convert map to Job entity
+        Job job = new Job();
+        job.setId(java.util.UUID.fromString((String) jobData.get("id")));
+        job.setTitle((String) jobData.get("title"));
+        job.setCompany((String) jobData.get("company"));
+        job.setLocation((String) jobData.get("location"));
+        job.setJobDescription((String) jobData.get("description"));
+        job.setApplicationUrl((String) jobData.get("apply_url"));
+        return job;
     }
 }

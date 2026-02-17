@@ -19,13 +19,10 @@ export function SortableSection({ section, onUpdate }: { section: any; onUpdate:
     transition,
   };
 
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, false] }],
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['clean']
-    ],
+  // Handle content change and propagate to parent
+  const handleChange = (newContent: string) => {
+    setContent(newContent);
+    onUpdate(newContent);
   };
 
   return (
@@ -45,12 +42,12 @@ export function SortableSection({ section, onUpdate }: { section: any; onUpdate:
         <h3 className="font-semibold text-sm uppercase tracking-wider">{section.title}</h3>
       </div>
       
-      {/* Use SimpleEditor instead of ReactQuill */}
+      {/* Fixed: Use handleChange instead of undefined onChange */}
       <div
         contentEditable
         className="min-h-[150px] p-3 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
         style={{ fontFamily: 'Times New Roman, serif' }}
-        onBlur={(e) => onChange(e.currentTarget.innerHTML)}
+        onBlur={(e) => handleChange(e.currentTarget.innerHTML)}
         dangerouslySetInnerHTML={{ __html: content }}
       />
     </div>

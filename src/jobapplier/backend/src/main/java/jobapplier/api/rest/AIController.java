@@ -113,67 +113,94 @@ public class AIController {
     }
 
     /**
+     * NEW ENDPOINT: Extract job titles from CV text
+     */
+    @PostMapping("/extract-job-titles")
+    public ResponseEntity<?> extractJobTitles(@RequestBody ExtractJobTitlesRequest request) {
+        try {
+            System.out.println("=== EXTRACT JOB TITLES REQUEST ===");
+            System.out.println("CV Text length: " + (request.cvText() != null ? request.cvText().length() : 0));
+            
+            String url = aiServiceUrl + "/agents/extract-job-titles";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<ExtractJobTitlesRequest> entity = new HttpEntity<>(request, headers);
+            
+            System.out.println("Calling AI service: " + url);
+            
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                url, entity, Map.class
+            );
+            
+            System.out.println("AI service response: " + response.getBody());
+            
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            System.err.println("Extract job titles failed: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(503)
+                .body(Map.of(
+                    "error", "AI service unavailable: " + e.getMessage(),
+                    "job_titles", new String[]{} // Return empty array as fallback
+                ));
+        }
+    }
+
+    /**
      * Upload resume and extract CV data
-     * Changed endpoint from /agents/upload-resume to /agents/extract-cv
-     * Fixed ByteArrayResource usage with proper filename
      */
     @PostMapping("/upload-resume")
-public ResponseEntity<?> uploadResume(@RequestParam("file") MultipartFile file) {
-    try {
-        // FIXED: Correct endpoint is /agents/extract-cv
-        String url = aiServiceUrl + "/agents/extract-cv";
+    public ResponseEntity<?> uploadResume(@RequestParam("file") MultipartFile file) {
+        try {
+            String url = aiServiceUrl + "/agents/extract-cv";
 
-        // Read file bytes
-        byte[] fileBytes = file.getBytes();
-        
-        // Create ByteArrayResource with proper filename
-        ByteArrayResource fileResource = new ByteArrayResource(fileBytes) {
-            @Override
-            public String getFilename() {
-                return file.getOriginalFilename();
-            }
-        };
+            byte[] fileBytes = file.getBytes();
+            
+            ByteArrayResource fileResource = new ByteArrayResource(fileBytes) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            };
 
-        // Build multipart request
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        // Use LinkedMultiValueMap for multipart data
-        org.springframework.util.LinkedMultiValueMap<String, Object> body = 
-            new org.springframework.util.LinkedMultiValueMap<>();
-        body.add("file", fileResource);
+            org.springframework.util.LinkedMultiValueMap<String, Object> body = 
+                new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("file", fileResource);
 
-        HttpEntity<org.springframework.util.LinkedMultiValueMap<String, Object>> entity = 
-            new HttpEntity<>(body, headers);
+            HttpEntity<org.springframework.util.LinkedMultiValueMap<String, Object>> entity = 
+                new HttpEntity<>(body, headers);
 
-        // FIXED: Use postForEntity with String.class to capture JSON response
-        ResponseEntity<String> response = restTemplate.postForEntity(
-            url, 
-            entity, 
-            String.class
-        );
-
-        // Parse the JSON string back to a Map and return it
-        if (response.getBody() != null) {
-            Map<String, Object> responseBody = objectMapper.readValue(
-                response.getBody(), 
-                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                url, 
+                entity, 
+                String.class
             );
-            return ResponseEntity.ok(responseBody);
-        } else {
-            return ResponseEntity.status(500).body(Map.of("error", "Empty response from AI service"));
+
+            if (response.getBody() != null) {
+                Map<String, Object> responseBody = objectMapper.readValue(
+                    response.getBody(), 
+                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}
+                );
+                return ResponseEntity.ok(responseBody);
+            } else {
+                return ResponseEntity.status(500).body(Map.of("error", "Empty response from AI service"));
+            }
+            
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Failed to read file: " + e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Upload failed: " + e.getMessage()
+            ));
         }
-        
-    } catch (IOException e) {
-        return ResponseEntity.status(500).body(Map.of(
-            "error", "Failed to read file: " + e.getMessage()
-        ));
-    } catch (Exception e) {
-        return ResponseEntity.status(500).body(Map.of(
-            "error", "Upload failed: " + e.getMessage()
-        ));
     }
-}
 
     @GetMapping("/health")
     public ResponseEntity<?> healthCheck() {
@@ -218,5 +245,10 @@ public ResponseEntity<?> uploadResume(@RequestParam("file") MultipartFile file) 
         String job_description,
         String company_name,
         String hiring_manager
+    ) {}
+
+    public record ExtractJobTitlesRequest(
+        String cvText,
+        String userContext
     ) {}
 }

@@ -326,13 +326,78 @@ async def neilwe_chat_endpoint(request: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
+@app.post("/agents/extract-job-titles")
+async def extract_job_titles_endpoint(request: dict):
+    """Extract suggested job titles from CV content"""
+    try:
+        cv_text = request.get("cv_text", "")
+        preferred_role = request.get("preferred_role", "")
+        
+        if not cv_text:
+            raise HTTPException(status_code=400, detail="CV text is required")
+        
+        job_analyzer = Agent(
+            name="Job Title Extractor",
+            instructions="""You are an expert career advisor and job market analyst. 
+            Analyze the CV and extract 3-5 specific job titles this candidate should apply for.
+            
+            Rules:
+            1. Consider their actual experience level (entry, mid, senior)
+            2. Include variations of their preferred role if provided
+            3. Suggest adjacent roles they qualify for
+            4. Return ONLY a JSON array of strings
+            
+            Example output: ["Senior Software Engineer", "Full Stack Developer", "Backend Engineer", "Technical Lead"]""",
+            model="gpt-5.2",
+            model_settings=ModelSettings(store=True)
+        )
+        
+        with trace("Job Title Extraction"):
+            result = await Runner.run(
+                job_analyzer,
+                input=f"CV Content:\n{cv_text}\n\nUser's preferred role: {preferred_role}\n\nExtract relevant job titles:"
+            )
+            
+        response_text = result.final_output_as(str)
+        
+        # Parse JSON array from response
+        try:
+            if "```json" in response_text:
+                json_str = response_text.split("```json")[1].split("```")[0]
+            elif "```" in response_text:
+                json_str = response_text.split("```")[1].split("```")[0]
+            else:
+                json_str = response_text
+                
+            job_titles = json.loads(json_str)
+            if not isinstance(job_titles, list):
+                job_titles = [preferred_role] if preferred_role else ["Software Engineer"]
+        except:
+            # Fallback
+            job_titles = [preferred_role] if preferred_role else ["Software Engineer"]
+            
+        return {
+            "job_titles": job_titles,
+            "primary_title": preferred_role or (job_titles[0] if job_titles else "Software Engineer"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Job title extraction failed: {str(e)}")
+
 @app.post("/agents/tailor-resume")
 async def tailor_resume_endpoint(request: dict):
     """Tailor resume for specific job"""
     try:
-        original_resume = request.get("original_resume", "")
-        job_description = request.get("job_description", "")
-        user_profile = request.get("user_profile", {})
+        # FIX: Accept both camelCase (frontend) and snake_case (legacy)
+        original_resume = request.get("original_resume", "") or request.get("originalCV", "")
+        job_description = request.get("job_description", "") or request.get("jobDescription", "")
+        user_profile = request.get("user_profile", {}) or request.get("userProfile", {})
+        
+        if not original_resume:
+            raise HTTPException(status_code=400, detail="Original resume is required")
+        if not job_description:
+            raise HTTPException(status_code=400, detail="Job description is required")
         
         prompt = f"""
         Original Resume:
@@ -357,6 +422,8 @@ async def tailor_resume_endpoint(request: dict):
             "timestamp": datetime.now().isoformat()
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Tailoring failed: {str(e)}")
 
@@ -364,9 +431,20 @@ async def tailor_resume_endpoint(request: dict):
 async def generate_cover_letter_endpoint(request: dict):
     """Generate cover letter"""
     try:
-        job_description = request.get("job_description", "")
-        user_profile = request.get("user_profile", {})
-        company_name = request.get("company_name", "")
+        # FIX: Accept both camelCase (frontend) and snake_case (legacy)
+        job_description = request.get("job_description", "") or request.get("jobDescription", "")
+        user_profile = request.get("user_profile", {}) or request.get("userProfile", {})
+        company_name = request.get("company_name", "") or request.get("companyName", "")
+        
+        if not job_description:
+            raise HTTPException(status_code=400, detail="Job description is required")
+        
+        # Extract user name from profile if available
+        user_name = ""
+        if isinstance(user_profile, dict):
+            user_name = user_profile.get("name", "")
+            if not user_name and "contactInfo" in user_profile:
+                user_name = user_profile["contactInfo"].get("firstName", "")
         
         prompt = f"""
         Job Description:
@@ -374,6 +452,7 @@ async def generate_cover_letter_endpoint(request: dict):
         
         User Profile: {json.dumps(user_profile)}
         Company Name: {company_name}
+        Candidate Name: {user_name}
         
         Generate a professional cover letter.
         """
@@ -389,6 +468,8 @@ async def generate_cover_letter_endpoint(request: dict):
             "timestamp": datetime.now().isoformat()
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
@@ -396,9 +477,15 @@ async def generate_cover_letter_endpoint(request: dict):
 async def match_score_endpoint(request: dict):
     """Calculate match score between CV and job description"""
     try:
-        user_profile = request.get("user_profile", {})
-        job_description = request.get("job_description", "")
-        resume_text = request.get("resume_text", "")
+        # FIX: Accept both camelCase (frontend) and snake_case (legacy)
+        user_profile = request.get("user_profile", {}) or request.get("userProfile", {})
+        job_description = request.get("job_description", "") or request.get("jobDescription", "")
+        resume_text = request.get("resume_text", "") or request.get("resumeText", "")
+        
+        if not resume_text:
+            raise HTTPException(status_code=400, detail="Resume text is required")
+        if not job_description:
+            raise HTTPException(status_code=400, detail="Job description is required")
         
         # Use cvtailoragent to analyze match
         prompt = f"""
@@ -454,5 +541,7 @@ async def match_score_endpoint(request: dict):
         
         return parsed
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Match score failed: {str(e)}")

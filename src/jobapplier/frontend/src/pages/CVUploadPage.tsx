@@ -4,9 +4,9 @@ import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, X, Loader2, CheckCircle2} from 'lucide-react';
+import { Upload, FileText, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { extractCV, updateProfile } from '@/lib/api';
+import { extractCV, extractJobTitlesFromCV, updateProfile } from '@/lib/api';
 
 export default function CVUploadPage() {
   const navigate = useNavigate();
@@ -66,91 +66,136 @@ export default function CVUploadPage() {
     }
   };
 
-  // In CVUploadPage.tsx, replace handleUpload:
+  const handleUpload = async () => {
+    if (!file) {
+      toast.error('Please select a file first');
+      return;
+    }
 
-const handleUpload = async () => {
-  if (!file) {
-    toast.error('Please select a file first');
-    return;
-  }
-
-  setIsUploading(true);
-  setUploadProgress(0);
-
-  try {
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => (prev >= 90 ? 90 : prev + 10));
-    }, 200);
-
-    //API CALL - Extract CV
-    const extractedData = await extractCV(file);
-    
-    clearInterval(progressInterval);
-    setUploadProgress(100);
-    //Get user info from context/signup
-  
-
-    const firstName = extractedData.contactInfo?.firstName || user?.name || '';
-    const lastName = extractedData.contactInfo?.lastName || user?.surname|| '' ;
-    // Create profile from extracted data
-    const fileToBase64 = (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-      });
-    };
-
-    const resumeBase64 = await fileToBase64(file);
-    if(!user?.id){ toast.error('User not authenticated. Please log in again.'); setIsUploading(false); return;}
-    const profile = {
-      id: user.id,
-      contactInfo: {
-        firstName: firstName,
-        lastName: lastName,
-        email: extractedData.contactInfo?.email || '',
-        phoneNumber: extractedData.contactInfo?.phone || '',
-      },
-      experience: extractedData.experiences?.map((exp: any, i: number) => ({
-        id: exp.id || `exp-${i}`,
-        title: exp.title,
-        company: exp.company,
-        duration: exp.duration,
-        description: exp.description,
-      })) || [],
-      education: extractedData.educations?.map((edu: any, i: number) => ({
-        id: edu.id || `edu-${i}`,
-        degree: edu.degree,
-        institution: edu.institution,
-        field: edu.field,
-        duration: edu.duration,
-        gpa: '',
-      })) || [],
-      skills: extractedData.skills?.map((skill: any) => 
-        typeof skill === 'string' ? skill : skill.name
-      ) || [],
-      projects: extractedData.projects || [],
-      certifications: extractedData.certifications || [],
-      resumeText: extractedData.rawText || '',
-      resumeFileName: file.name,
-      resumeUploadedAt: new Date().toISOString(),
-      resumeBase64: resumeBase64,
-    };
-    if(user?.id){ await updateProfile(user.id, profile)};
-    setProfile(profile);
-    setExtractionComplete(true);
-    toast.success('CV uploaded and analyzed successfully!');
-    
-    setTimeout(() => navigate('/preferences'), 1500);
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to upload CV');
+    setIsUploading(true);
     setUploadProgress(0);
-  } finally {
-    setIsUploading(false);
-  }
-};
+
+    try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => (prev >= 70 ? 70 : prev + 10));
+      }, 200);
+
+      // API CALL - Extract CV
+      const extractedData = await extractCV(file);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(80);
+      
+      // Get user info from context/signup
+      let suggestedJobTitles: string[] = [];
+      
+      try {
+        if (extractedData.rawText && extractedData.rawText.length > 50) {
+          const jobTitleResult = await extractJobTitlesFromCV(
+            extractedData.rawText,
+            '' // preferred role (empty for initial extraction)
+          );
+          
+          suggestedJobTitles = jobTitleResult.job_titles || [];
+          
+          if (suggestedJobTitles.length === 0) {
+            console.warn("No job titles extracted from CV");
+            toast.warning('Could not auto-detect job titles from CV. You can manually select your role in the next step.');
+          } else {
+            console.log("Extracted job titles:", suggestedJobTitles);
+            toast.success(`Identified ${suggestedJobTitles.length} suitable job roles from your CV`);
+          }
+        } else {
+          console.warn("CV text too short for job title extraction");
+          toast.warning('CV text too short for analysis. You can manually select your role.');
+        }
+      } catch (e) {
+        console.error("Job title extraction failed:", e);
+        toast.error('Failed to analyze CV for job titles, but continuing with upload...');
+        // Continue without AI suggestions - user can still select manually
+      }
+      
+      setUploadProgress(90);
+
+      const firstName = extractedData.contactInfo?.firstName || user?.name || '';
+      const lastName = extractedData.contactInfo?.lastName || user?.surname || '';
+      
+      // Create profile from extracted data
+      const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+        });
+      };
+
+      const resumeBase64 = await fileToBase64(file);
+      
+      if(!user?.id){ 
+        toast.error('User not authenticated. Please log in again.'); 
+        setIsUploading(false); 
+        return;
+      }
+      
+      const profile = {
+        id: user.id,
+        contactInfo: {
+          firstName: firstName,
+          lastName: lastName,
+          email: extractedData.contactInfo?.email || '',
+          phoneNumber: extractedData.contactInfo?.phone || '',
+        },
+        experience: extractedData.experiences?.map((exp: any, i: number) => ({
+          id: exp.id || `exp-${i}`,
+          title: exp.title,
+          company: exp.company,
+          duration: exp.duration,
+          description: exp.description,
+        })) || [],
+        education: extractedData.educations?.map((edu: any, i: number) => ({
+          id: edu.id || `edu-${i}`,
+          degree: edu.degree,
+          institution: edu.institution,
+          field: edu.field,
+          duration: edu.duration,
+          gpa: '',
+        })) || [],
+        skills: extractedData.skills?.map((skill: any) => 
+          typeof skill === 'string' ? skill : skill.name
+        ) || [],
+        projects: extractedData.projects || [],
+        certifications: extractedData.certifications || [],
+        resumeText: extractedData.rawText || '',
+        resumeFileName: file.name,
+        resumeUploadedAt: new Date().toISOString(),
+        resumeBase64: resumeBase64,
+        suggestedJobTitles: suggestedJobTitles,
+        primaryJobTitle: suggestedJobTitles[0] || ''
+      };
+      
+      // Save to backend
+      await updateProfile(user.id, profile);
+      
+      // Update local context
+      setProfile(profile);
+      
+      // Save to localStorage for preferences page to access immediately
+      localStorage.setItem('suggestedJobTitles', JSON.stringify(suggestedJobTitles));
+      
+      setExtractionComplete(true);
+      toast.success('CV uploaded and analyzed successfully!');
+      
+      setTimeout(() => navigate('/preferences'), 1500);
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.message || 'Failed to upload CV');
+      setUploadProgress(0);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const clearFile = () => {
     setFile(null);
@@ -230,7 +275,9 @@ const handleUpload = async () => {
                 {isUploading && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Uploading...</span>
+                      <span className="text-muted-foreground">
+                        {uploadProgress < 80 ? 'Uploading...' : 'Analyzing with AI...'}
+                      </span>
                       <span className="text-primary font-medium">{uploadProgress}%</span>
                     </div>
                     <Progress value={uploadProgress} className="h-2" />
@@ -245,6 +292,14 @@ const handleUpload = async () => {
                   </div>
                 )}
 
+                {/* Error State - when extraction fails but upload succeeds */}
+                {!extractionComplete && !isUploading && uploadProgress === 0 && file && (
+                  <div className="flex items-center gap-3 p-4 bg-yellow-500/10 rounded-xl text-yellow-500 text-sm">
+                    <AlertCircle className="w-5 h-5" />
+                    <span>Ready to upload and analyze</span>
+                  </div>
+                )}
+
                 {/* Upload Button */}
                 {!extractionComplete && (
                   <Button
@@ -255,7 +310,7 @@ const handleUpload = async () => {
                     {isUploading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      'Match'
+                      'Analyze CV'
                     )}
                   </Button>
                 )}

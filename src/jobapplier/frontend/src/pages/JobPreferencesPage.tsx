@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Check, ChevronRight, MapPin, Briefcase, Clock, Globe } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Briefcase, Clock, Globe, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { getProfile, updateProfile } from '@/lib/api';
 
 interface RoleCategory {
   name: string;
@@ -16,6 +17,7 @@ const roleCategories: RoleCategory[] = [
   {
     name: 'Software/IT',
     subcategories: [
+      'Software Engineering',
       'Backend Engineering',
       'Frontend Engineering',
       'Full Stack Engineering',
@@ -107,13 +109,79 @@ const locations = [
 
 export default function JobPreferencesPage() {
   const navigate = useNavigate();
-  const { setJobPreferences } = useApp();
+  const { setJobPreferences, user, profile } = useApp();
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [openToRemote, setOpenToRemote] = useState(true);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [suggestedRoles, setSuggestedRoles] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Load suggested roles from localStorage or API
+  useEffect(() => {
+    loadSuggestedRoles();
+  }, [user?.id]);
+
+  const loadSuggestedRoles = async () => {
+    if (!user?.id) {
+      console.log('No user ID available');
+      return;
+    }
+
+    // First try localStorage (immediate)
+    const saved = localStorage.getItem('suggestedJobTitles');
+    if (saved) {
+      try {
+        const titles = JSON.parse(saved);
+        console.log('Loaded from localStorage:', titles);
+        if (Array.isArray(titles) && titles.length > 0) {
+          setSuggestedRoles(titles);
+          if (!selectedRole) {
+            setSelectedRole(titles[0]);
+          }
+          return; // Exit early if we have localStorage data
+        }
+      } catch (e) {
+        console.error("Failed to parse suggested roles from localStorage:", e);
+      }
+    }
+    
+    // Fallback: fetch from profile API
+    console.log('Fetching suggested roles from API for user:', user.id);
+    setIsRefreshing(true);
+    try {
+      const profileData = await getProfile(user.id);
+      console.log('Profile data received:', profileData);
+      
+      if (profileData?.suggestedJobTitles && profileData.suggestedJobTitles.length > 0) {
+        console.log('Setting suggested roles from API:', profileData.suggestedJobTitles);
+        setSuggestedRoles(profileData.suggestedJobTitles);
+        // Save to localStorage for next time
+        localStorage.setItem('suggestedJobTitles', JSON.stringify(profileData.suggestedJobTitles));
+        if (!selectedRole) {
+          setSelectedRole(profileData.suggestedJobTitles[0]);
+        }
+      } else {
+        console.warn('No suggestedJobTitles found in profile');
+        // If profile has primaryJobTitle but no suggestedJobTitles array
+        if (profileData?.primaryJobTitle) {
+          setSuggestedRoles([profileData.primaryJobTitle]);
+          localStorage.setItem('suggestedJobTitles', JSON.stringify([profileData.primaryJobTitle]));
+          if (!selectedRole) {
+            setSelectedRole(profileData.primaryJobTitle);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile for suggested roles:", err);
+      toast.error('Failed to load AI suggestions. Please select your role manually.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleContractTypeToggle = (typeId: string) => {
     setSelectedContractTypes(prev =>
@@ -129,7 +197,7 @@ export default function JobPreferencesPage() {
     setShowRoleDropdown(false);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedRole) {
       toast.error('Please select a preferred role');
       return;
@@ -145,16 +213,38 @@ export default function JobPreferencesPage() {
       return;
     }
 
-    // Save preferences
-    setJobPreferences({
-      preferredRole: selectedRole,
-      contractTypes: selectedContractTypes,
-      location: selectedLocation,
-      openToRemote,
-    });
+    setIsLoading(true);
 
-    toast.success('Preferences saved!');
-    navigate('/dashboard');
+    try {
+      const preferences = {
+        preferredRole: selectedRole,
+        contractTypes: selectedContractTypes,
+        location: selectedLocation,
+        openToRemote,
+      };
+
+      // Save to context
+      setJobPreferences(preferences);
+      
+      // Save to backend (merge with existing profile)
+      if (user?.id) {
+        await updateProfile(user.id, {
+          ...profile,
+          preferences: preferences,
+          preferredRole: selectedRole,
+          location: selectedLocation,
+          openToRemote: openToRemote
+        });
+      }
+      
+      toast.success('Preferences saved!');
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Failed to save preferences');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -186,7 +276,53 @@ export default function JobPreferencesPage() {
                 />
                 
                 {showRoleDropdown && (
-                  <div className="dropdown-menu mt-2 max-h-96 overflow-y-auto">
+                  <div className="dropdown-menu mt-2 max-h-[500px] overflow-y-auto">
+                    {/* AI Suggestions Section */}
+                    {(suggestedRoles.length > 0 || isRefreshing) && (
+                      <div className="p-3 bg-primary/5 border-b border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-semibold text-primary flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            SUGGESTED BASED ON YOUR CV
+                          </p>
+                          {isRefreshing && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                        </div>
+                        
+                        {suggestedRoles.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {suggestedRoles.map((title) => (
+                              <button
+                                key={title}
+                                onClick={() => {
+                                  setSelectedRole(title);
+                                  setShowRoleDropdown(false);
+                                }}
+                                className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                              >
+                                {title}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No suggestions available</p>
+                        )}
+                        
+                        {/* Refresh button */}
+                        {!isRefreshing && suggestedRoles.length === 0 && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              loadSuggestedRoles();
+                            }}
+                            className="text-xs text-primary flex items-center gap-1 mt-2 hover:underline"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Refresh suggestions
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-2">
                       {/* Categories */}
                       <div className="border-r border-border">
@@ -215,7 +351,9 @@ export default function JobPreferencesPage() {
                               <div
                                 key={sub}
                                 onClick={() => handleRoleSelect(sub, selectedCategory)}
-                                className="dropdown-item text-sm hover:bg-primary/10 hover:text-primary"
+                                className={`dropdown-item text-sm hover:bg-primary/10 hover:text-primary ${
+                                  selectedRole === sub ? 'bg-primary/10 text-primary font-medium' : ''
+                                }`}
                               >
                                 {sub}
                               </div>
@@ -225,6 +363,13 @@ export default function JobPreferencesPage() {
                   </div>
                 )}
               </div>
+              
+              {/* Debug info - remove in production */}
+              {suggestedRoles.length === 0 && !isRefreshing && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  No AI suggestions loaded. {!user?.id ? 'Please log in again.' : 'Try uploading your CV again.'}
+                </p>
+              )}
             </div>
 
             {/* Contract Type */}
@@ -321,6 +466,12 @@ export default function JobPreferencesPage() {
                     <p className="font-medium">
                       {selectedRole || 'Not selected'}
                     </p>
+                    {suggestedRoles.length > 0 && selectedRole && suggestedRoles.includes(selectedRole) && (
+                      <span className="text-xs text-primary flex items-center gap-1 mt-1">
+                        <Sparkles className="w-3 h-3" />
+                        AI Suggested
+                      </span>
+                    )}
                   </div>
                   
                   <div>
@@ -358,8 +509,13 @@ export default function JobPreferencesPage() {
           <Button
             onClick={handleSubmit}
             className="btn-primary px-12 h-14 text-lg"
+            disabled={isLoading}
           >
-            Next
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            ) : (
+              'Next'
+            )}
           </Button>
         </div>
       </div>

@@ -4,15 +4,14 @@ import jobapplier.api.JobSpyClient;
 import jobapplier.api.Manager;
 import jobapplier.model.User;
 import jobapplier.repository.UserRepository;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -24,11 +23,60 @@ public class JobController {
     private final JobSpyClient jobSpyClient;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate;
 
-    public JobController(Manager manager, JobSpyClient jobSpyClient, UserRepository userRepository) {
+    @Value("${jobspy.service.url:http://localhost:8002}")
+    private String jobSpyUrl;
+
+    public JobController(Manager manager, JobSpyClient jobSpyClient, UserRepository userRepository, RestTemplate restTemplate) {
         this.manager = manager;
         this.jobSpyClient = jobSpyClient;
         this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    /**
+     * NEW ENDPOINT: Search jobs using profile data directly with JobSpy service
+     * This bypasses the Java recommendation system and calls JobSpy microservice directly
+     */
+    @PostMapping("/search-by-profile")
+    public ResponseEntity<?> searchJobsByProfile(@RequestBody Map<String, Object> request) {
+        try {
+            System.out.println("=== SEARCH BY PROFILE REQUEST ===");
+            System.out.println("Request: " + request);
+            
+            // Forward the entire request to JobSpy service
+            String url = jobSpyUrl + "/search-by-profile";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            
+            System.out.println("Forwarding to JobSpy: " + url);
+            
+            // Call JobSpy service
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                url,
+                entity,
+                Map.class
+            );
+            
+            System.out.println("JobSpy response status: " + response.getStatusCode());
+            System.out.println("JobSpy response body: " + response.getBody());
+            
+            return ResponseEntity.ok(response.getBody());
+            
+        } catch (Exception e) {
+            System.err.println("Error calling JobSpy: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                "jobs", List.of(),
+                "error", "Failed to search jobs: " + e.getMessage(),
+                "search_terms_used", List.of(),
+                "total_found", 0
+            ));
+        }
     }
 
     @GetMapping("/recommendations/{userId}")
@@ -72,7 +120,7 @@ public class JobController {
                     map.put("source", job.source());
                     return map;
                 })
-                .collect(Collectors.toList());  // Use collect instead of toList()
+                .collect(Collectors.toList());
 
             return ResponseEntity.ok(Map.of("jobs", formattedJobs));
             
@@ -87,8 +135,6 @@ public class JobController {
 
     // Helper methods to extract preferences from user profile
     private String extractRoleFromProfile(User user) {
-        // Parse profile_data JSON to get preferred role
-        // Fallback to "software engineer" if not found
         try {
             if (user.getProfileData() != null) {
                 JsonNode root = objectMapper.readTree(user.getProfileData());
@@ -98,7 +144,7 @@ public class JobController {
         } catch (Exception e) {
             System.err.println("Failed to parse role: " + e.getMessage());
         }
-        return "software engineer"; // fallback
+        return "software engineer";
     }
 
     private String extractLocationFromProfile(User user) {
@@ -117,7 +163,6 @@ public class JobController {
     }
 
     private String mapLocationToJobSpy(String locationId) {
-        // Map frontend location IDs to JobSpy format
         return switch(locationId) {
             case "johannesburg" -> "Johannesburg, Gauteng";
             case "cape-town" -> "Cape Town, Western Cape";
@@ -128,7 +173,6 @@ public class JobController {
             default -> "Johannesburg, South Africa";
         };
     }
-
 
     private boolean isRemotePreferred(User user) {
         try {
@@ -148,7 +192,7 @@ public class JobController {
                 JsonNode root = objectMapper.readTree(user.getProfileData());
                 JsonNode types = root.path("contractTypes");
                 if (types.isArray() && types.size() > 0) {
-                    return types.get(0).asText(); // Get first contract type
+                    return types.get(0).asText();
                 }
             }
         } catch (Exception e) {
@@ -157,12 +201,9 @@ public class JobController {
         return "full-time";
     }
 
-
     private double calculateMatchScore(JobSpyClient.JobListing job, User user) {
-        // Simple matching algorithm - you can improve this
-        double score = 0.7; // Base score
+        double score = 0.7;
         
-        // Boost score if job title matches user's preferred role
         String userProfile = user.getProfileData() != null ? user.getProfileData().toLowerCase() : "";
         String jobTitle = job.title().toLowerCase();
         
@@ -170,7 +211,6 @@ public class JobController {
             score += 0.2;
         }
         
-        // Cap at 0.98
         return Math.min(score, 0.98);
     }
 

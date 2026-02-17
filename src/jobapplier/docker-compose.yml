@@ -8,9 +8,10 @@ services:
     container_name: jobapplier-ai
     ports:
       - "8001:8001"
+    env_file:
+      - .env
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      PORT: 8001
+      - PORT=8001
     networks:
       - jobapplier-network
     restart: unless-stopped

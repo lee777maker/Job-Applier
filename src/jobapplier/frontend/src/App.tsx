@@ -22,15 +22,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Onboarding Route - redirects to preferences if not completed
+// Onboarding Route - checks for CV upload AND preferences completion
 function OnboardingRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, jobPreferences } = useApp();
+  const { isAuthenticated, jobPreferences, profile } = useApp();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  if (!jobPreferences) {
+  // Check if CV has been uploaded (profile has resume data)
+  if (!profile?.resumeFileName) {
+    return <Navigate to="/upload-cv" replace />;
+  }
+  
+  // Check if preferences are set
+  if (!jobPreferences?.preferredRole) {
     return <Navigate to="/preferences" replace />;
   }
   
@@ -38,13 +44,24 @@ function OnboardingRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  const { isAuthenticated } = useApp();
+  
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={
+        isAuthenticated 
+          ? <Navigate to="/dashboard" replace />
+          : <LoginPage />
+      } />
       
-      {/* Protected Routes */}
+      <Route path="/signup" element={
+        isAuthenticated 
+          ? <Navigate to="/upload-cv" replace />
+          : <SignupPage />
+      } />
+  
+      {/* Protected Onboarding Routes */}
       <Route 
         path="/upload-cv" 
         element={
@@ -53,6 +70,7 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      
       <Route 
         path="/preferences" 
         element={
@@ -62,7 +80,7 @@ function AppRoutes() {
         } 
       />
       
-      {/* Onboarding Complete Routes */}
+      {/* Fully Onboarded Routes - require CV AND preferences */}
       <Route 
         path="/dashboard" 
         element={
@@ -71,6 +89,7 @@ function AppRoutes() {
           </OnboardingRoute>
         } 
       />
+      
       <Route 
         path="/ats-score" 
         element={
@@ -79,6 +98,7 @@ function AppRoutes() {
           </OnboardingRoute>
         } 
       />
+      
       <Route 
         path="/profile" 
         element={

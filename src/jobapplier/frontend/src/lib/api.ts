@@ -49,6 +49,27 @@ export const updateProfile = (userId: string, profileData: any) =>
 export const getJobRecommendations = (userId: string, limit: number = 10) =>
   fetchApi(`/jobs/recommendations/${userId}?limit=${limit}`);
 
+export const extractJobTitlesFromCV = (cvText: string, preferredRole?: string) =>
+  fetch(`${AI_SERVICE_URL}/agents/extract-job-titles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cv_text: cvText,
+      preferred_role: preferredRole || ''
+    }),
+  }).then(r => r.json());
+
+export const searchJobsByProfile = (profile: any, preferences: any, maxResults: number = 20) =>
+  fetch(`${API_BASE_URL}/jobs/search-by-profile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      profile,
+      preferences,
+      max_results: maxResults
+    }),
+  }).then(r => r.json());
+
 // AI Service APIs (direct to Python service)
 export const extractCV = (file: File) => {
   const formData = new FormData();
