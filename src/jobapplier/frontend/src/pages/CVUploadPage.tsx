@@ -166,7 +166,13 @@ export default function CVUploadPage() {
           typeof skill === 'string' ? skill : skill.name
         ) || [],
         projects: extractedData.projects || [],
-        certifications: extractedData.certifications || [],
+        certifications: extractedData.certifications?.map((cert: any) => ({
+          id: cert.id || `cert-${Date.now()}-${Math.random()}`,
+          name: cert.name,
+          link: cert.link || '',
+          issuer: cert.issuer || '',
+          date: cert.date || ''
+        })) || [],
         resumeText: extractedData.rawText || '',
         resumeFileName: file.name,
         resumeUploadedAt: new Date().toISOString(),

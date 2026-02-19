@@ -9,6 +9,7 @@
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/repository/UserRepository.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/api/JobSpyClient.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/repository/ApplicationRepository.java
+/Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/api/rest/NewsController.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/model/Task.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/api/rest/AIController.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/recommendation/JobRecommenderImpl.java
@@ -18,6 +19,7 @@
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/model/Application.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/config/SecurityConfig.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/api/rest/JobController.java
+/Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/api/rest/DashboardController.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/audit/AuditService.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/api/rest/ProfileController.java
 /Users/lethaboneo/Desktop/Job_applier/src/jobapplier/backend/src/main/java/jobapplier/model/User.java

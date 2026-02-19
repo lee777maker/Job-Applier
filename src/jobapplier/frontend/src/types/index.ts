@@ -10,10 +10,12 @@ export interface ContactInfo {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
+  linkedin?: string;
+  github?: string;
 }
 
-export interface Experience {
+export interface ExperienceItem {
   id: string;
   title: string;
   company: string;
@@ -21,64 +23,49 @@ export interface Experience {
   description: string;
 }
 
-export interface Education {
+export interface EducationItem {
   id: string;
   degree: string;
-  field: string;
   institution: string;
-  gpa: string;
+  field?: string;
+  duration: string;
+  gpa?: string;
 }
 
-export interface Project {
+export interface SkillItem {
+  id: string;
+  name: string;
+  level?: string;
+}
+
+export interface ProjectItem {
   id: string;
   name: string;
   description: string;
+  link?: string;
 }
 
-export interface Certification {
+export interface CertificationItem {
   id: string;
   name: string;
-  link: string;
+  issuer?: string;
+  date?: string;
+  link?: string;
 }
 
 export interface UserProfile {
-  id: string;
-  contactInfo: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phoneNumber: string;
-  };
-  experience: Array<{
-    id: string;
-    title: string;
-    company: string;
-    duration: string;
-    description: string;
-  }>;
-  education: Array<{
-    id: string;
-    degree: string;
-    institution: string;
-    field: string;
-    duration: string;
-    gpa?: string;
-  }>;
-  projects: Array<{
-    id: string;
-    name: string;
-    description: string;
-  }>;
-  skills: Array<string | { name: string; level?: string }>;
-  certifications: Array<{
-    id: string;
-    name: string;
-    link?: string;
-  }>;
+  contactInfo: ContactInfo;
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  skills: (string | SkillItem)[];
+  projects: ProjectItem[];
+  certifications: CertificationItem[];
   resumeFileName?: string;
   resumeUploadedAt?: string;
-  resumeText?: string;  // If you store parsed resume text
-  resumeBase64?: string; // If you want to store the base64 string for viewing
+  resumeBase64?: string;
+  resumeText?: string;
+  suggestedJobTitles?: string[];
+  primaryJobTitle?: string;
 }
 
 // Job Types
@@ -87,63 +74,99 @@ export interface Job {
   title: string;
   company: string;
   location: string;
+  description?: string;
   applicationUrl: string;
   matchScore: number;
-  description?: string;
+  postedAt?: string;
+  jobType?: string;
+  salary?: string;
+  source?: string;
 }
 
 export interface JobPreferences {
   preferredRole: string;
-  contractTypes: string[];
   location: string;
   openToRemote: boolean;
+  contractTypes: string[];
+  minSalary?: number;
+  maxSalary?: number;
+  daysOld?: number;
 }
 
-// Application Types
-export interface Application {
-  id: string;
-  jobId: string;
-  jobTitle: string;
-  company: string;
-  status: 'DRAFT' | 'SUBMITTED' | 'PARTIAL_ACTION_REQUIRED' | 'FAILED_NOT_SUBMITTED';
-  createdAt: string;
-}
-
-// AI Types
-export interface MatchScoreResult {
-  match_score: number;
-  ats_score: number;
-  strengths: string[];
-  gaps: string[];
-  keywords_to_add: string[];
-  recommended_bullets: string[];
-  confidence: number;
-}
-
-export interface TailoredResume {
-  tailored_resume: string;
-  changes_made: {
-    words_added: number;
-    words_removed: number;
-    length_change_percent: number;
-    top_keywords_added: string[];
-  };
-  optimization_score: number;
-}
-
+// Chat Types
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: number;
 }
 
-// CV Extracted Data
-export interface CVExtractedData {
-  contactInfo: ContactInfo;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-  projects: Project[];
-  certifications: Certification[];
-  rawText: string;
+// AI Service Types
+export interface MatchScoreResult {
+  ats_score: number;
+  match_score: number;
+  strengths: string[];
+  gaps: string[];
+  keywords_to_add: string[];
+  recommended_bullets: string[];
+}
+
+export interface TailoredResume {
+  tailored_resume: string;
+  timestamp?: string;
+}
+
+export interface CoverLetterResult {
+  cover_letter: string;
+  timestamp?: string;
+}
+
+export interface EmailResult {
+  email: string;
+  timestamp?: string;
+}
+
+// Application Types
+export interface Application {
+  id: string;
+  userId: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'declined' | 'withdrawn';
+  appliedAt: string;
+  matchScore: number;
+  notes?: string;
+}
+
+// Dashboard Types
+export interface Analytics {
+  totalApplications: number;
+  activeApplications: number;
+  interviewsScheduled: number;
+  offersReceived: number;
+  responseRate: number;
+  averageMatchScore: number;
+}
+
+export interface CareerBlog {
+  id: string;
+  title: string;
+  source: string;
+  excerpt: string;
+  url: string;
+  category: string;
+  date: string;
+}
+
+// API Response Types
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface JobSearchResponse {
+  jobs: Job[];
+  search_terms_used: string[];
+  total_found: number;
 }

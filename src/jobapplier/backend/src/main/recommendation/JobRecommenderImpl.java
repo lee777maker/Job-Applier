@@ -14,12 +14,12 @@ public class JobRecommenderImpl implements JobRecommender {
     
     private final JobRepository jobRepository;
     private final AIClient aiClient;
-    private final WebClient webClient; // ADD THIS FIELD
+    private final WebClient webClient; 
     
     public JobRecommenderImpl(JobRepository jobRepository, AIClient aiClient, WebClient webClient) {
         this.jobRepository = jobRepository;
         this.aiClient = aiClient;
-        this.webClient = webClient; // INITIALIZE
+        this.webClient = webClient; 
     }
     
     @Override

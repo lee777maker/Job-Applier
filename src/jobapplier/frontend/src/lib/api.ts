@@ -1,5 +1,3 @@
-// frontend/src/lib/api.ts
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || '/ai';
 
@@ -46,7 +44,7 @@ export const updateProfile = (userId: string, profileData: any) =>
   });
 
 // Job APIs
-export const getJobRecommendations = (userId: string, limit: number = 10) =>
+export const getJobRecommendations = (userId: string, limit: number = 50) =>
   fetchApi(`/jobs/recommendations/${userId}?limit=${limit}`);
 
 export const extractJobTitlesFromCV = (cvText: string, preferredRole?: string) =>
@@ -59,7 +57,7 @@ export const extractJobTitlesFromCV = (cvText: string, preferredRole?: string) =
     }),
   }).then(r => r.json());
 
-export const searchJobsByProfile = (profile: any, preferences: any, maxResults: number = 20) =>
+export const searchJobsByProfile = (profile: any, preferences: any, maxResults: number = 50) =>
   fetch(`${API_BASE_URL}/jobs/search-by-profile`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -127,13 +125,85 @@ export const generateCoverLetter = (jobDescription: string, userProfile: any, co
     }),
   }).then(r => r.json());
 
-export const neilweChat = (message: string, context?: any, chatHistory?: any[]) =>
+// Generate outreach email
+export const generateEmail = (jobDescription: string, userProfile: any, recipientType: 'recruiter' | 'hiring_manager' = 'recruiter') =>
+  fetch(`${AI_SERVICE_URL}/agents/generate-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jobDescription,
+      userProfile,
+      recipientType,
+    }),
+  }).then(r => r.json());
+
+export const neilweChat = (message: string, profile?: any, chatHistory?: any[]) =>
   fetch(`${AI_SERVICE_URL}/agents/neilwe-chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message,
-      context,
+      profile,     // full profile object — used to personalise Neilwe's context
       chatHistory,
     }),
   }).then(r => r.json());
+// ─── Application APIs ─────────────────────────────────────────────────────────
+
+export const createApplication = (data: {
+  userId?: string;
+  jobId?: string;
+  company: string;
+  role: string;
+  location?: string;
+  status?: string;
+  appliedAt?: string;  
+  notes?: string;
+  wasSuccessful?: boolean | null;
+  outcomeNotes?: string;
+  applicationUrl?: string;
+  source?: string;
+  jobDescription?: string;
+  matchScore?: number;
+}) =>
+  fetchApi('/applications', { 
+    method: 'POST', 
+    body: JSON.stringify({
+      ...data,
+      company: data.company || 'Unknown Company',
+      role: data.role || 'Unknown Role',
+      status: data.status || 'applied',
+      source: data.source || 'manual'
+    }) 
+  });
+
+export const getApplications = (userId: string) =>
+  fetchApi(`/applications/user/${userId}`);
+
+// ─── Dashboard APIs (gracefully degrade if backend not yet implemented) ───────
+
+export const getDashboardAnalytics = (userId: string) =>
+  fetchApi(`/dashboard/analytics/${userId}`).catch(() => ({
+    totalApplications: 0,
+    interviewRate: 0,
+    offerRate: 0,
+    avgResponseDays: 0,
+  }));
+
+export const getDashboardApplications = (userId: string) =>
+  fetchApi(`/dashboard/applications/${userId}`).catch(() => ({
+    applications: [],
+  }));
+
+export const getApplicationStatusBreakdown = (userId: string) =>
+  fetchApi(`/dashboard/status-breakdown/${userId}`).catch(() => ({
+    applied: 0, interviewing: 0, offered: 0, rejected: 0,
+  }));
+
+export const getWeeklyActivity = (userId: string) =>
+  fetchApi(`/dashboard/weekly-activity/${userId}`).catch(() => ({ weeks: [] }));
+
+export const getMatchScoreTrend = (userId: string) =>
+  fetchApi(`/dashboard/match-score-trend/${userId}`).catch(() => ({ trend: [] }));
+
+export const getCareerResources = () =>
+  fetchApi('/dashboard/career-resources').catch(() => ({ resources: [] }));

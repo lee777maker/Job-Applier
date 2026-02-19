@@ -86,6 +86,11 @@ public class Manager {
                 ApplicationStatus.DRAFT,
                 Instant.now()
         );
+        // Set additional fields
+        app.setCompany(job.getCompany());
+        app.setRole(job.getTitle());
+        app.setSource("system");
+        
         applicationRepo.save(app);
         auditService.log("APPLICATION_CREATED", user.getEmail(), app.getId().toString());
         return app;

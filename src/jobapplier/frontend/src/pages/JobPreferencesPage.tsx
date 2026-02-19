@@ -238,7 +238,7 @@ export default function JobPreferencesPage() {
       }
       
       toast.success('Preferences saved!');
-      navigate('/dashboard');
+      navigate('/past-applications');
     } catch (error) {
       toast.error('Failed to save preferences');
       console.error(error);

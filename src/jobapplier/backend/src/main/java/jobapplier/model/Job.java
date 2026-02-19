@@ -11,14 +11,16 @@ public class Job {
     private final UUID id;
     private String company;
     private String title;
+    @Column(name = "job_description", columnDefinition = "TEXT")
     private String jobDescription;
     private String jobUrl;
     private final Instant createdAt;
-
+    public Job() {
+        this.id = UUID.randomUUID();
+        this.createdAt = Instant.now();
+    }
     public Job(UUID id, String company, String title, String jobDescription, String jobUrl, Instant createdAt) {
         if (id == null) throw new IllegalArgumentException("id cannot be null");
-        if (jobDescription == null || jobDescription.isBlank())
-            throw new IllegalArgumentException("jobDescription cannot be blank");
         this.id = id;
         this.company = company;
         this.title = title;
@@ -38,10 +40,8 @@ public class Job {
     public void setTitle(String title) { this.title = title; }
 
     public void setJobDescription(String jobDescription) {
-        if (jobDescription == null || jobDescription.isBlank())
-            throw new IllegalArgumentException("jobDescription cannot be blank");
-        this.jobDescription = jobDescription;
-    }
+    this.jobDescription = jobDescription;
+}
 
     public void setJobUrl(String jobUrl) { this.jobUrl = jobUrl; }
 }

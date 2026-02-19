@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import {
   Home,
   User,
+  Wand2,
   LayoutDashboard,
-  Briefcase,
   LogOut,
   Menu,
   X,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -23,11 +23,12 @@ export default function Navigation({ showLogo = true }: NavigationProps) {
   const { logout, user } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // FIXED: Renamed navigation items - Jobs→Dashboard, Dashboard→AI Assistance
   const navItems = [
-    { path: '/dashboard', label: 'Home', icon: Home },
+    { path: '/home', label: 'Home', icon: Home },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/assistance', label: 'AI Assistance', icon: Wand2 },
     { path: '/profile', label: 'Profile', icon: User },
-    { path: '/ats-score', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/jobs', label: 'Jobs', icon: Briefcase },
   ];
 
   const handleLogout = () => {
@@ -45,7 +46,7 @@ export default function Navigation({ showLogo = true }: NavigationProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           {showLogo && (
-            <Link to="/dashboard" className="flex items-center gap-2">
+            <Link to="/home" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>

@@ -65,7 +65,21 @@ public class JobController {
             System.out.println("JobSpy response status: " + response.getStatusCode());
             System.out.println("JobSpy response body: " + response.getBody());
             
-            return ResponseEntity.ok(response.getBody());
+            // FIX: Sort jobs by match score if present in response
+            Map<String, Object> responseBody = response.getBody();
+            if (responseBody != null && responseBody.containsKey("jobs")) {
+                List<Map<String, Object>> jobs = (List<Map<String, Object>>) responseBody.get("jobs");
+                if (jobs != null && !jobs.isEmpty()) {
+                    jobs.sort((a, b) -> {
+                        double scoreA = getDoubleValue(a.get("match_score"));
+                        double scoreB = getDoubleValue(b.get("match_score"));
+                        return Double.compare(scoreB, scoreA); // Descending order
+                    });
+                    responseBody.put("jobs", jobs);
+                }
+            }
+            
+            return ResponseEntity.ok(responseBody);
             
         } catch (Exception e) {
             System.err.println("Error calling JobSpy: " + e.getMessage());
@@ -122,6 +136,13 @@ public class JobController {
                 })
                 .collect(Collectors.toList());
 
+            // FIX: Sort jobs by match score in descending order (highest first)
+            formattedJobs.sort((a, b) -> {
+                Double scoreA = (Double) a.get("matchScore");
+                Double scoreB = (Double) b.get("matchScore");
+                return Double.compare(scoreB, scoreA); // Descending order
+            });
+
             return ResponseEntity.ok(Map.of("jobs", formattedJobs));
             
         } catch (Exception e) {
@@ -130,6 +151,17 @@ public class JobController {
                 "jobs", List.of(),
                 "error", "Failed to fetch jobs: " + e.getMessage()
             ));
+        }
+    }
+
+    // Helper method to safely get double values
+    private double getDoubleValue(Object obj) {
+        if (obj == null) return 0.0;
+        if (obj instanceof Number) return ((Number) obj).doubleValue();
+        try {
+            return Double.parseDouble(obj.toString());
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
     }
 

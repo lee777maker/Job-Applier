@@ -35,23 +35,23 @@ public class SecurityConfig {
                     "/error"
                 ).permitAll()
                 
-                // Semi-protected - allow with basic validation
+                // Semi-protected - allow all API calls for development
                 .requestMatchers(
-                    "/api/ai/upload-resume",           // CV upload
-                    "/api/ai/extract-job-titles",      // Job title extraction
-                    "/api/profile/**",                 // Profile operations
-                    "/api/jobs/recommendations/**",    // Job recommendations
-                    "/api/jobs/search-by-profile",     // Profile-based search
-                    "/api/jobs/search",                // General job search
-                    "/api/preferences/**",             // User preferences
-                    "/api/chat/**"                     // Chat with Neilwe
-                ).permitAll()  // Changed to permitAll() - you can add JWT validation later
+                    "/api/ai/**",             // All AI endpoints
+                    "/api/profile/**",        // Profile operations
+                    "/api/jobs/**",           // All job endpoints
+                    "/api/preferences/**",    // User preferences
+                    "/api/chat/**",           // Chat with Neilwe
+                    "/api/applications",      // ← ADDED: Create applications
+                    "/api/applications/**",   // ← ADDED: All application endpoints
+                    "/api/dashboard/**"       // ← ADDED: Dashboard analytics
+                ).permitAll()  
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers
-                .frameOptions(frame -> frame.sameOrigin()) // For H2 console
+                .frameOptions(frame -> frame.sameOrigin())
             );
         
         return http.build();
@@ -61,15 +61,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow specific origins
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",  // Vite dev server
-            "http://localhost:3000",  // React dev server alternative
-            "http://localhost:8080",  // Backend
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:8080"
-        ));
+        // Allow all origins for development
+        configuration.setAllowedOrigins(List.of("*"));
         
         // Allow all HTTP methods
         configuration.setAllowedMethods(List.of(
@@ -79,18 +72,8 @@ public class SecurityConfig {
         // Allow all headers
         configuration.setAllowedHeaders(List.of("*"));
         
-        // Allow credentials (cookies, authorization headers)
-        configuration.setAllowCredentials(true);
-        
-        // Cache preflight response for 1 hour
-        configuration.setMaxAge(3600L);
-        
-        // Expose headers to the frontend
-        configuration.setExposedHeaders(List.of(
-            "Authorization",
-            "Content-Type",
-            "X-Total-Count"
-        ));
+        // Don't allow credentials with wildcard origins
+        configuration.setAllowCredentials(false);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

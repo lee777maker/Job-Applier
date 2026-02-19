@@ -1,23 +1,5 @@
 .
-├── .DS_Store
-├── .env
-├── .github
-│   └── appmod
-│       └── appcat
-├── .gitignore
-├── .pids
 ├── ai-service
-│   ├── .dockerignore
-│   ├── .DS_Store
-│   ├── .env
-│   ├── .gcloudignore
-│   ├── .pytest_cache
-│   │   ├── .gitignore
-│   │   ├── CACHEDIR.TAG
-│   │   ├── README.md
-│   │   └── v
-│   │       └── cache
-│   │           └── nodeids
 │   ├── app.py
 │   ├── config.py
 │   ├── Dockerfile
@@ -26,7 +8,6 @@
 │   │   ├── contact.py
 │   │   ├── llm.py
 │   │   └── sections.py
-│   ├── jobspy_service.py
 │   ├── load_health.py
 │   ├── models.py
 │   ├── patterns.py
@@ -40,30 +21,19 @@
 │   └── tests
 │       └── test_api.py
 ├── backend
-│   ├── .dockerignore
-│   ├── .DS_Store
-│   ├── .mvn
-│   │   └── wrapper
-│   │       └── maven-wrapper.properties
 │   ├── Dockerfile
 │   ├── mvnw
 │   ├── mvnw.cmd
 │   ├── pom.xml
 │   └── src
-│       ├── .DS_Store
 │       ├── main
-│       │   ├── .DS_Store
 │       │   ├── java
-│       │   │   ├── .DS_Store
 │       │   │   └── jobapplier
-│       │   │       ├── .DS_Store
 │       │   │       ├── ai
-│       │   │       │   ├── .DS_Store
 │       │   │       │   ├── AIClient.java
 │       │   │       │   ├── AIResult.java
 │       │   │       │   └── AIStatus.java
 │       │   │       ├── api
-│       │   │       │   ├── .DS_Store
 │       │   │       │   ├── JobSpyClient.java
 │       │   │       │   ├── Manager.java
 │       │   │       │   └── rest
@@ -98,7 +68,6 @@
 │       │   │   ├── JobRecommender.java
 │       │   │   └── JobRecommenderImpl.java
 │       │   └── resources
-│       │       ├── .DS_Store
 │       │       ├── application-dev.properties
 │       │       ├── application-gcp.properties
 │       │       ├── application.properties
@@ -112,8 +81,6 @@
 ├── docker-compose.yml
 ├── files.txt
 ├── frontend
-│   ├── .dockerignore
-│   ├── .DS_Store
 │   ├── components.json
 │   ├── Dockerfile
 │   ├── eslint.config.js
@@ -124,11 +91,9 @@
 │   ├── postcss.config.js
 │   ├── README.md
 │   ├── src
-│   │   ├── .DS_Store
 │   │   ├── App.css
 │   │   ├── App.tsx
 │   │   ├── components
-│   │   │   ├── .DS_Store
 │   │   │   ├── custom
 │   │   │   │   ├── DocumentEditor.tsx
 │   │   │   │   ├── Navigation.tsx
@@ -197,9 +162,11 @@
 │   │   │   └── utils.ts
 │   │   ├── main.tsx
 │   │   ├── pages
+│   │   │   ├── AssistancePage.tsx
 │   │   │   ├── ATSScorePage.tsx
 │   │   │   ├── CVUploadPage.tsx
 │   │   │   ├── DashboardPage.tsx
+│   │   │   ├── HomePage.tsx
 │   │   │   ├── JobPreferencesPage.tsx
 │   │   │   ├── LoginPage.tsx
 │   │   │   ├── ProfilePage.tsx
@@ -211,10 +178,25 @@
 │   ├── tsconfig.json
 │   ├── tsconfig.node.json
 │   └── vite.config.ts
+├── infrastructure
+│   └── nginx
+│       ├── nginx.conf
+│       └── ssl
+├── jobspy-service
+│   ├── Dockerfile
+│   ├── jobspy_service.py
+│   └── requirements.txt
 ├── logs
-│   ├── ai-service.log
-│   ├── backend.log
-│   └── frontend.log
-└── start.sh
+├── start.sh
+└── tests
+    ├── integration
+    ├── performance
+    │   ├── load_test.js
+    │   └── unit
+    │       ├── backend
+    │       │   └── AuthControllerTest.java
+    │       └── frontend
+    │           └── HomePage.test.tsx
+    └── unit
 
-45 directories, 173 files
+48 directories, 152 files

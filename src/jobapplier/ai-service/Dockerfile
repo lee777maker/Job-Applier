@@ -19,22 +19,19 @@ RUN python -m spacy download en_core_web_sm
 
 
 # ---------- Runtime stage ----------
-# IMPORTANT: Keep the same distro family as the builder.
-# Alpine (musl) will break many wheels (torch, spacy, etc.).
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy installed deps + spaCy model from builder
+# Add curl for Docker health checks
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /usr/local /usr/local
-
-# App code
 COPY . .
-
 
 ENV PYTHONUNBUFFERED=1 \
     PORT=8001
 EXPOSE 8001
 
-# Cloud Run-friendly server (uses $PORT)
 CMD ["sh", "-c", "gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:${PORT} app:app"]

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Pencil, FileText, Briefcase, GraduationCap, Folder,
-  Award, ExternalLink, Save, X, Loader2 
+  Award, ExternalLink, Save, X, Loader2, Tag, Plus, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getProfile, updateProfile } from '@/lib/api';
@@ -15,23 +15,20 @@ import { getProfile, updateProfile } from '@/lib/api';
 // Type definition for contact fields
 type ContactField = 'firstName' | 'lastName' | 'email' | 'phoneNumber';
 
-
 export default function ProfilePage() {
   const { user, profile, setProfile } = useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editedProfile, setEditedProfile] = useState(profile);
+  
+  // New item states
   const [newExperience, setNewExperience] = useState({ title: '', company: '', duration: '', description: '' });
   const [newProject, setNewProject] = useState({ name: '', description: '' });
   const [newCertification, setNewCertification] = useState({ name: '', link: '' });
-  const [newEducation, setNewEducation] = useState({ 
-  degree: '', 
-  institution: '', 
-  field: '', 
-  duration: '', 
-  gpa: '' 
-});
+  const [newEducation, setNewEducation] = useState({ degree: '', institution: '', field: '', duration: '', gpa: '' });
+  const [newSkill, setNewSkill] = useState('');
+
   // Load profile from API on mount
   useEffect(() => {
     if (user?.id) {
@@ -43,8 +40,17 @@ export default function ProfilePage() {
     try {
       setIsLoading(true);
       const data = await getProfile(user!.id);
-      setProfile(data);
-      setEditedProfile(data);
+      // Ensure all arrays exist
+      const safeData = {
+        ...data,
+        skills: data.skills || [],
+        certifications: data.certifications || [],
+        experience: data.experience || [],
+        education: data.education || [],
+        projects: data.projects || []
+      };
+      setProfile(safeData);
+      setEditedProfile(safeData);
     } catch (error: any) {
       toast.error('Failed to load profile');
       console.error(error);
@@ -87,11 +93,51 @@ export default function ProfilePage() {
     });
   };
 
+  // Skills Management
+  const addSkill = () => {
+    if (!newSkill.trim()) return;
+    
+    const currentSkills = editedProfile?.skills || [];
+    if (currentSkills.length >= 35) {
+      toast.error('Maximum 35 skills allowed');
+      return;
+    }
+    
+    if (currentSkills.includes(newSkill.trim())) {
+      toast.error('Skill already exists');
+      return;
+    }
+    
+    setEditedProfile(prev => ({
+      ...prev!,
+      skills: [...currentSkills, newSkill.trim()]
+    }));
+    setNewSkill('');
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setEditedProfile(prev => ({
+      ...prev!,
+      skills: prev?.skills?.filter((skill: any) => {
+        const skillName = typeof skill === 'string' ? skill : skill.name;
+        return skillName !== skillToRemove;
+      }) || []
+    }));
+  };
+
+  const handleSkillKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addSkill();
+    }
+  };
+
+  // Experience Management
   const updateExperience = (index: number, field: string, value: string) => {
     setEditedProfile(prev => {
       if (!prev) return null;
       const updatedExperience = [...(prev.experience || [])];
-      updatedExperience[index] ={ ...updatedExperience[index], [field]: value };
+      updatedExperience[index] = { ...updatedExperience[index], [field]: value };
       return { ...prev, experience: updatedExperience };
     });
   };
@@ -99,6 +145,10 @@ export default function ProfilePage() {
   const addExperience = () => {
     if ((editedProfile?.experience?.length || 0) >= 7){
       toast.error('Maximum of 7 experiences allowed');
+      return;
+    }
+    if (!newExperience.title.trim()) {
+      toast.error('Job title is required');
       return;
     }
     setEditedProfile(prev => ({
@@ -111,10 +161,40 @@ export default function ProfilePage() {
   const removeExperience = (index: number) => {
     setEditedProfile(prev => ({
       ...prev!,
-      experience: prev?.experience?.filter((_, i) => i !== index) || []
+      experience: prev?.experience?.filter((_, i: number) => i !== index) || []
     }));
   };
 
+  // Education Management
+  const updateEducation = (index: number, field: string, value: string) => {
+    setEditedProfile(prev => {
+      if (!prev) return null;
+      const newEdu = [...(prev.education || [])];
+      newEdu[index] = { ...newEdu[index], [field]: value };
+      return { ...prev, education: newEdu };
+    });
+  };
+
+  const addEducation = () => {
+    if (!newEducation.degree.trim()) {
+      toast.error('Degree is required');
+      return;
+    }
+    setEditedProfile(prev => ({
+      ...prev!,
+      education: [...(prev?.education || []), { ...newEducation, id: `edu-${Date.now()}` }]
+    }));
+    setNewEducation({ degree: '', institution: '', field: '', duration: '', gpa: '' });
+  };
+
+  const removeEducation = (index: number) => {
+    setEditedProfile(prev => ({
+      ...prev!,
+      education: prev?.education?.filter((_, i: number) => i !== index) || []
+    }));
+  };
+
+  // Project Management
   const updateProject = (index: number, field: string, value: string) => {
     setEditedProfile(prev => {
       if (!prev) return null;
@@ -125,6 +205,10 @@ export default function ProfilePage() {
   };
   
   const addProject = () => {
+    if (!newProject.name.trim()) {
+      toast.error('Project name is required');
+      return;
+    }
     setEditedProfile(prev => ({
       ...prev!,
       projects: [...(prev?.projects || []), { ...newProject, id: `proj-${Date.now()}` }]
@@ -135,10 +219,11 @@ export default function ProfilePage() {
   const removeProject = (index: number) => {
     setEditedProfile(prev => ({
       ...prev!,
-      projects: prev?.projects?.filter((_, i) => i !== index) || []
+      projects: prev?.projects?.filter((_, i: number) => i !== index) || []
     }));
   };
 
+  // Certification Management
   const updateCertification = (index: number, field: string, value: string) => {
     setEditedProfile(prev => {
       if (!prev) return null;
@@ -149,9 +234,18 @@ export default function ProfilePage() {
   };
   
   const addCertification = () => {
+    const currentCerts = editedProfile?.certifications || [];
+    if (currentCerts.length >= 15) {
+      toast.error('Maximum 15 certifications allowed');
+      return;
+    }
+    if (!newCertification.name.trim()) {
+      toast.error('Certification name is required');
+      return;
+    }
     setEditedProfile(prev => ({
       ...prev!,
-      certifications: [...(prev?.certifications || []), { ...newCertification, id: `cert-${Date.now()}` }]
+      certifications: [...currentCerts, { ...newCertification, id: `cert-${Date.now()}` }]
     }));
     setNewCertification({ name: '', link: '' });
   };
@@ -159,34 +253,9 @@ export default function ProfilePage() {
   const removeCertification = (index: number) => {
     setEditedProfile(prev => ({
       ...prev!,
-      certifications: prev?.certifications?.filter((_, i) => i !== index) || []
+      certifications: prev?.certifications?.filter((_, i: number) => i !== index) || []
     }));
   };
-
-const updateEducation = (index: number, field: string, value: string) => {
-  setEditedProfile(prev => {
-    if (!prev) return null;
-    const newEdu = [...(prev.education || [])];
-    newEdu[index] = { ...newEdu[index], [field]: value };
-    return { ...prev, education: newEdu };
-  });
-};
-
-const addEducation = () => {
-  setEditedProfile(prev => ({
-    ...prev!,
-    education: [...(prev?.education || []), { ...newEducation, id: `edu-${Date.now()}` }]
-  }));
-  setNewEducation({ degree: '', institution: '', field: '', duration: '', gpa: '' });
-};
-
-const removeEducation = (index: number) => {
-  setEditedProfile(prev => ({
-    ...prev!,
-    education: prev?.education?.filter((_, i) => i !== index) || []
-  }));
-};
-    
 
   if (isLoading) {
     return (
@@ -213,6 +282,9 @@ const removeEducation = (index: number) => {
       </div>
     );
   }
+
+  const skills = editedProfile?.skills || [];
+  const certifications = editedProfile?.certifications || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -284,114 +356,108 @@ const removeEducation = (index: number) => {
             </section>
 
             {/* Experience */}
-            {profile?.experience && profile.experience.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                    Experience ({editedProfile?.experience?.length || 0}/7)
-                  </h2>
-                  {isEditing && (editedProfile?.experience?.length || 0) < 7 && (
-                    <Button variant="outline" size="sm" onClick={addExperience}>
-                      + Add
-                    </Button>
-                  )}
-                </div>
-                
-                <div className="space-y-4">
-                  {editedProfile?.experience?.map((exp: any, index: number) => (
-                    <Card key={exp.id} className="bg-card border-border">
-                      <CardContent className="p-5">
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <Input
-                                value={exp.title}
-                                onChange={(e) => updateExperience(index, 'title', e.target.value)}
-                                placeholder="Job Title"
-                                className="input-dark font-semibold"
-                              />
-                              <Input
-                                value={exp.duration}
-                                onChange={(e) => updateExperience(index, 'duration', e.target.value)}
-                                placeholder="Duration (e.g., Dec 2023 - Jan 2024)"
-                                className="input-dark text-right"
-                              />
-                            </div>
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-primary" />
+                  Experience ({editedProfile?.experience?.length || 0}/7)
+                </h2>
+              </div>
+              
+              <div className="space-y-4">
+                {editedProfile?.experience?.map((exp: any, index: number) => (
+                  <Card key={exp.id || index} className="bg-card border-border">
+                    <CardContent className="p-5">
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
                             <Input
-                              value={exp.company}
-                              onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                              placeholder="Company"
-                              className="input-dark text-muted-foreground"
+                              value={exp.title}
+                              onChange={(e) => updateExperience(index, 'title', e.target.value)}
+                              placeholder="Job Title"
+                              className="input-dark font-semibold"
                             />
-                            <textarea
-                              value={exp.description}
-                              onChange={(e) => updateExperience(index, 'description', e.target.value)}
-                              placeholder="Description"
-                              className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[100px]"
+                            <Input
+                              value={exp.duration}
+                              onChange={(e) => updateExperience(index, 'duration', e.target.value)}
+                              placeholder="Duration (e.g., Dec 2023 - Jan 2024)"
+                              className="input-dark text-right"
                             />
-                            <Button 
-                              variant="destructive" 
-                              size="sm" 
-                              onClick={() => removeExperience(index)}
-                            >
-                              Remove
-                            </Button>
                           </div>
-                        ) : (
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-white">{exp.title}</h3>
-                              <p className="text-muted-foreground">{exp.company}</p>
-                              <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
-                            </div>
-                            <span className="text-sm text-white whitespace-nowrap ml-4">{exp.duration}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                  
-                  {/* Add new experience form when editing */}
-                  {isEditing && (editedProfile?.experience?.length || 0) < 7 && (
-                    <Card className="bg-card border-border border-dashed">
-                      <CardContent className="p-5 space-y-3">
-                        <p className="text-sm text-muted-foreground">Add New Experience</p>
-                        <div className="grid grid-cols-2 gap-3">
                           <Input
-                            value={newExperience.title}
-                            onChange={(e) => setNewExperience({...newExperience, title: e.target.value})}
-                            placeholder="Job Title"
-                            className="input-dark"
+                            value={exp.company}
+                            onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                            placeholder="Company"
+                            className="input-dark text-muted-foreground"
                           />
-                          <Input
-                            value={newExperience.duration}
-                            onChange={(e) => setNewExperience({...newExperience, duration: e.target.value})}
-                            placeholder="Duration"
-                            className="input-dark"
+                          <textarea
+                            value={exp.description}
+                            onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                            placeholder="Description"
+                            className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[100px]"
                           />
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => removeExperience(index)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remove
+                          </Button>
                         </div>
+                      ) : (
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-white">{exp.title}</h3>
+                            <p className="text-muted-foreground">{exp.company}</p>
+                            <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
+                          </div>
+                          <span className="text-sm text-white whitespace-nowrap ml-4">{exp.duration}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {isEditing && (editedProfile?.experience?.length || 0) < 7 && (
+                  <Card className="bg-card border-border border-dashed">
+                    <CardContent className="p-5 space-y-3">
+                      <p className="text-sm text-muted-foreground font-medium">Add New Experience</p>
+                      <div className="grid grid-cols-2 gap-3">
                         <Input
-                          value={newExperience.company}
-                          onChange={(e) => setNewExperience({...newExperience, company: e.target.value})}
-                          placeholder="Company"
+                          value={newExperience.title}
+                          onChange={(e) => setNewExperience({...newExperience, title: e.target.value})}
+                          placeholder="Job Title"
                           className="input-dark"
                         />
-                        <textarea
-                          value={newExperience.description}
-                          onChange={(e) => setNewExperience({...newExperience, description: e.target.value})}
-                          placeholder="Description"
-                          className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[100px]"
+                        <Input
+                          value={newExperience.duration}
+                          onChange={(e) => setNewExperience({...newExperience, duration: e.target.value})}
+                          placeholder="Duration"
+                          className="input-dark"
                         />
-                        <Button onClick={addExperience} disabled={!newExperience.title}>
-                          Add Experience
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </section>
-            )}
+                      </div>
+                      <Input
+                        value={newExperience.company}
+                        onChange={(e) => setNewExperience({...newExperience, company: e.target.value})}
+                        placeholder="Company"
+                        className="input-dark"
+                      />
+                      <textarea
+                        value={newExperience.description}
+                        onChange={(e) => setNewExperience({...newExperience, description: e.target.value})}
+                        placeholder="Description"
+                        className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[100px]"
+                      />
+                      <Button onClick={addExperience} disabled={!newExperience.title.trim()}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Experience
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </section>
 
             {/* Resume */}
             <section>
@@ -432,23 +498,17 @@ const removeEducation = (index: number) => {
             </section>
 
             {/* Education */}
-            {profile?.education && profile.education.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-primary" />
                   Education
                 </h2>
-                {isEditing && (
-                  <Button variant="outline" size="sm" onClick={addEducation}>
-                    + Add
-                  </Button>
-                )}
               </div>
               
               <div className="space-y-4">
                 {editedProfile?.education?.map((edu: any, index: number) => (
-                  <Card key={edu.id} className="bg-card border-border">
+                  <Card key={edu.id || index} className="bg-card border-border">
                     <CardContent className="p-5">
                       {isEditing ? (
                         <div className="space-y-3">
@@ -491,6 +551,7 @@ const removeEducation = (index: number) => {
                             size="sm" 
                             onClick={() => removeEducation(index)}
                           >
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Remove
                           </Button>
                         </div>
@@ -506,8 +567,9 @@ const removeEducation = (index: number) => {
                             <p className="font-medium">{edu.institution}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">GPA</p>
-                            <p className="font-medium">{edu.gpa || 'N/A'}</p>
+                            <p className="text-sm text-muted-foreground">Duration</p>
+                            <p className="font-medium">{edu.duration}</p>
+                            {edu.gpa && <p className="text-sm text-muted-foreground">GPA: {edu.gpa}</p>}
                           </div>
                         </div>
                       )}
@@ -518,7 +580,7 @@ const removeEducation = (index: number) => {
                 {isEditing && (
                   <Card className="bg-card border-border border-dashed">
                     <CardContent className="p-5 space-y-3">
-                      <p className="text-sm text-muted-foreground">Add New Education</p>
+                      <p className="text-sm text-muted-foreground font-medium">Add New Education</p>
                       <div className="grid grid-cols-2 gap-3">
                         <Input
                           value={newEducation.degree}
@@ -553,7 +615,8 @@ const removeEducation = (index: number) => {
                           className="input-dark"
                         />
                       </div>
-                      <Button onClick={addEducation} disabled={!newEducation.degree}>
+                      <Button onClick={addEducation} disabled={!newEducation.degree.trim()}>
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Education
                       </Button>
                     </CardContent>
@@ -561,142 +624,141 @@ const removeEducation = (index: number) => {
                 )}
               </div>
             </section>
-            )}
 
             {/* Projects */}
-            {profile?.projects && profile.projects.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Folder className="w-5 h-5 text-primary" />
-                    Projects
-                  </h2>
-                  {isEditing && (
-                    <Button variant="outline" size="sm" onClick={addProject}>
-                      + Add
-                    </Button>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {editedProfile?.projects?.map((project: any, index: number) => (
-                    <Card key={project.id} className="bg-card border-border">
-                      <CardContent className="p-5">
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            <Input
-                              value={project.name}
-                              onChange={(e) => updateProject(index, 'name', e.target.value)}
-                              placeholder="Project Name"
-                              className="input-dark font-semibold"
-                            />
-                            <textarea
-                              value={project.description}
-                              onChange={(e) => updateProject(index, 'description', e.target.value)}
-                              placeholder="Description"
-                              className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[80px]"
-                            />
-                            <Button 
-                              variant="destructive" 
-                              size="sm" 
-                              onClick={() => removeProject(index)}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <h3 className="font-semibold mb-2">{project.name}</h3>
-                            <p className="text-sm text-muted-foreground">{project.description}</p>
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {isEditing && (
-                    <Card className="bg-card border-border border-dashed">
-                      <CardContent className="p-5 space-y-3">
-                        <p className="text-sm text-muted-foreground">Add New Project</p>
-                        <Input
-                          value={newProject.name}
-                          onChange={(e) => setNewProject({...newProject, name: e.target.value})}
-                          placeholder="Project Name"
-                          className="input-dark"
-                        />
-                        <textarea
-                          value={newProject.description}
-                          onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                          placeholder="Description"
-                          className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[80px]"
-                        />
-                        <Button onClick={addProject} disabled={!newProject.name}>
-                          Add Project
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {/* Certifications */}
-            {profile?.certifications && profile.certifications.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Award className="w-5 h-5 text-primary" />
-                  Certifications
+                  <Folder className="w-5 h-5 text-primary" />
+                  Projects
                 </h2>
-                {isEditing && (
-                  <Button variant="outline" size="sm" onClick={addCertification}>
-                    + Add
-                  </Button>
-                )}
               </div>
-              
               <div className="space-y-4">
-                {editedProfile?.certifications?.map((cert: any, index: number) => (
-                  <Card key={cert.id} className="bg-card border-border">
+                {editedProfile?.projects?.map((project: any, index: number) => (
+                  <Card key={project.id || index} className="bg-card border-border">
                     <CardContent className="p-5">
                       {isEditing ? (
                         <div className="space-y-3">
                           <Input
-                            value={cert.name}
-                            onChange={(e) => updateCertification(index, 'name', e.target.value)}
-                            placeholder="Certification Name"
-                            className="input-dark font-medium"
+                            value={project.name}
+                            onChange={(e) => updateProject(index, 'name', e.target.value)}
+                            placeholder="Project Name"
+                            className="input-dark font-semibold"
                           />
-                          <Input
-                            value={cert.link || ''}
-                            onChange={(e) => updateCertification(index, 'link', e.target.value)}
-                            placeholder="Link (optional)"
-                            className="input-dark"
+                          <textarea
+                            value={project.description}
+                            onChange={(e) => updateProject(index, 'description', e.target.value)}
+                            placeholder="Description"
+                            className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[80px]"
                           />
                           <Button 
                             variant="destructive" 
                             size="sm" 
-                            onClick={() => removeCertification(index)}
+                            onClick={() => removeProject(index)}
                           >
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Remove
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">{cert.name}</p>
-                          {cert.link && (
-                            <a href={cert.link} target="_blank" rel="noreferrer" className="text-primary text-sm flex items-center">
-                              View <ExternalLink className="w-3 h-3 ml-1" />
-                            </a>
-                          )}
-                        </div>
+                        <>
+                          <h3 className="font-semibold mb-2">{project.name}</h3>
+                          <p className="text-sm text-muted-foreground">{project.description}</p>
+                        </>
                       )}
                     </CardContent>
                   </Card>
                 ))}
-                
                 {isEditing && (
                   <Card className="bg-card border-border border-dashed">
                     <CardContent className="p-5 space-y-3">
-                      <p className="text-sm text-muted-foreground">Add New Certification</p>
+                      <p className="text-sm text-muted-foreground font-medium">Add New Project</p>
+                      <Input
+                        value={newProject.name}
+                        onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                        placeholder="Project Name"
+                        className="input-dark"
+                      />
+                      <textarea
+                        value={newProject.description}
+                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                        placeholder="Description"
+                        className="w-full bg-secondary border-border rounded-md p-3 text-sm min-h-[80px]"
+                      />
+                      <Button onClick={addProject} disabled={!newProject.name.trim()}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Project
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </section>
+
+            {/* Certifications */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" />
+                  Certifications ({certifications.length}/15)
+                </h2>
+              </div>
+              
+              <div className="space-y-4">
+                {certifications.length > 0 ? (
+                  certifications.map((cert: any, index: number) => (
+                    <Card key={cert.id || index} className="bg-card border-border">
+                      <CardContent className="p-5">
+                        {isEditing ? (
+                          <div className="space-y-3">
+                            <Input
+                              value={cert.name}
+                              onChange={(e) => updateCertification(index, 'name', e.target.value)}
+                              placeholder="Certification Name"
+                              className="input-dark font-medium"
+                            />
+                            <Input
+                              value={cert.link || ''}
+                              onChange={(e) => updateCertification(index, 'link', e.target.value)}
+                              placeholder="Link (optional)"
+                              className="input-dark"
+                            />
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={() => removeCertification(index)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium">{cert.name}</p>
+                            {cert.link && (
+                              <a href={cert.link} target="_blank" rel="noreferrer" className="text-primary text-sm flex items-center hover:underline">
+                                View <ExternalLink className="w-3 h-3 ml-1" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="bg-card border-border border-dashed">
+                    <CardContent className="p-8 text-center text-muted-foreground">
+                      <Award className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No certifications added yet</p>
+                      {isEditing && <p className="text-sm mt-1">Add certifications to enhance your profile</p>}
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {isEditing && certifications.length < 15 && (
+                  <Card className="bg-card border-border border-dashed">
+                    <CardContent className="p-5 space-y-3">
+                      <p className="text-sm text-muted-foreground font-medium">Add New Certification</p>
                       <Input
                         value={newCertification.name}
                         onChange={(e) => setNewCertification({...newCertification, name: e.target.value})}
@@ -709,7 +771,8 @@ const removeEducation = (index: number) => {
                         placeholder="Link (optional)"
                         className="input-dark"
                       />
-                      <Button onClick={addCertification} disabled={!newCertification.name}>
+                      <Button onClick={addCertification} disabled={!newCertification.name.trim()}>
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Certification
                       </Button>
                     </CardContent>
@@ -717,7 +780,66 @@ const removeEducation = (index: number) => {
                 )}
               </div>
             </section>
-            )}
+            {/* Skills Section - NEW */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-primary" />
+                  Skills ({skills.length}/35)
+                </h2>
+              </div>
+              
+              <Card className="bg-card border-border">
+                <CardContent className="p-6">
+                  {isEditing && (
+                    <div className="flex gap-2 mb-4">
+                      <Input
+                        placeholder="Add a skill (e.g., React, Python, Project Management)"
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        onKeyDown={handleSkillKeyDown}
+                        className="input-dark flex-1"
+                      />
+                      <Button 
+                        onClick={addSkill} 
+                        disabled={!newSkill.trim() || skills.length >= 35}
+                        size="sm"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill: any, index: number) => (
+                        <div 
+                          key={index} 
+                          className="flex items-center gap-1 bg-secondary px-3 py-1.5 rounded-full text-sm"
+                        >
+                          <span>{typeof skill === 'string' ? skill : skill.name}</span>
+                          {isEditing && (
+                            <button 
+                              onClick={() => removeSkill(typeof skill === 'string' ? skill : skill.name)}
+                              className="ml-1 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Tag className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No skills added yet</p>
+                      {isEditing && <p className="text-sm">Add skills to improve job matching</p>}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
           </div>
         </ScrollArea>
       </div>

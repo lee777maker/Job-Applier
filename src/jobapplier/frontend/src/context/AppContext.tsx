@@ -21,6 +21,8 @@ interface AppState {
   // CV Upload
   uploadedCV: File | null;
   extractedCVData: any | null;
+
+  isLoading: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -62,6 +64,7 @@ const defaultState: AppState = {
   ],
   uploadedCV: null,
   extractedCVData: null,
+  isLoading: true, // Start with loading true
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -78,12 +81,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setState(prev => ({
           ...prev,
           ...parsed,
-          // Don't restore file objects
           uploadedCV: null,
+          isLoading: false, // Done loading after restore
         }));
       } catch (e) {
         console.error('Failed to parse saved state:', e);
+        setState(prev => ({ ...prev, isLoading: false }));
       }
+    } else {
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
 
@@ -155,6 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, extractedCVData: data }));
   };
 
+  // SINGLE RETURN - All context values provided
   return (
     <AppContext.Provider
       value={{

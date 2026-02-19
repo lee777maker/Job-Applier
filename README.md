@@ -1,298 +1,253 @@
-# AI Automated Job Applier
-<p align="center">
-  <img src="docs/HomePage.png" alt="Recommended Jobs" width="900" />
-</p>
+# JobApplier AI 🤖
 
-## JobApplier AI
+<p align="center">
+  <img src="docs/HomePage.png" alt="JobApplier AI Home" width="900" />
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" alt="React">
-  <img src="https://img.shields.io/badge/Spring%20Boot-3.0-6DB33F?logo=spring-boot&logoColor=white" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.2-6DB33F?logo=spring-boot&logoColor=white" alt="Spring Boot">
   <img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/OpenAI-GPT--4-412991?logo=openai&logoColor=white" alt="OpenAI">
+  <img src="https://img.shields.io/badge/Status-Beta-orange" alt="Beta">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
 </p>
 
 <p align="center">
-  <b>AI-Powered Job Application Assistant</b><br>
-  Automate your job search with intelligent resume tailoring, ATS optimization, and personalized cover letters.
+  <b>AI-Powered Job Application Assistant for South African Job Seekers</b><br>
+  Automate your job search with intelligent resume tailoring, ATS optimization, live job listings, and personalized cover letters.
 </p>
 
-<h4 align="center">
+<p align="center">
   <a href="https://discord.com/channels/1466486232027500815/1466486232585470163">
-    <img src="https://img.shields.io/badge/discord-7289da.svg?style=flat-square&logo=discord" alt="discord" style="height: 20px;">
+    <img src="https://img.shields.io/badge/Discord-Join%20Community-7289da?logo=discord" alt="Discord">
   </a>
   <a href="https://www.linkedin.com/in/lethabo-neo/">
-    <img src="https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white&link=YOUR_LINKEDIN_URL" alt="linkedin" style="height: 20px;">
+    <img src="https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin" alt="LinkedIn">
   </a>
-</h4>
-
-## Introduction
-
-This system streamlines job applications by leveraging AI to:
-- Tailor CV based on **experience, education, skills, projects**
-- Generate **custom cover letters** from job descriptions and personal information
-- Recommend relevant jobs automatically
-- Message recruiters
-- Reduce repetitive manual work end-to-end
-  
-This happens seamlessly and intelligently, adapting as it learns more about you.
-<details open>
-<p align="center">
-  <img src="docs/Profile.png" alt="Recommended Jobs" width="900" />
 </p>
-<p align="center">
-  <img src="docs/Jobs.png" alt="Recommended Jobs" width="900" />
-</p>
-</details>
+
+---
+
+## What Is This?
+
+JobApplier AI is an end-to-end job application assistant that reduces the time you spend on repetitive job search tasks from hours to minutes. Upload your CV once, set your preferences, and let AI handle the tailoring, scoring, and cover letter writing for every application.
+
+**Current status:** Beta prototype — core features working, some agents still in active development.
+
+---
 
 ## Key Features
 
-- **Real Job Listings** - Live job listing from South Africa (last 30 days)
-- **AI Chat Assistant (Neilwe)** - Personal career coach for job search strategy
-- **CV Intelligence** - Upload PDF/DOCX and auto-extract skills, experience, education
-- **ATS Optimization** - Match scoring and keyword recommendations
-- **Cover Letter Generator** - Tailored cover letters in seconds
-- **Resume Tailoring** - AI-optimized resumes for specific job postings
-- **Dashboard Analytics** - Track applications and match scores
-- **Location-Based Search** - Johannesburg, Cape Town, Durban, Pretoria, or Remote
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Live Job Listings** | Real jobs from Indeed & LinkedIn, filtered to South Africa (last 30 days) | ✅ Working |
+| **CV Intelligence** | Upload PDF/DOCX — AI auto-extracts skills, experience, education, and certifications | ✅ Working |
+| **ATS Score** | Match score + missing keyword recommendations for any job posting | ✅ Working |
+| **Cover Letter Generator** | Tailored cover letters in seconds from your profile + job description | ✅ Working |
+| **Resume Tailoring** | AI rewrites your CV to align with a specific job | ✅ Working |
+| **AI Coach (Neilwe)** | Personal AI career coach for job search strategy | 🔧 Beta |
+| **Dashboard Analytics** | Application tracking and match score history | 🔧 Beta |
+| **Auto-Application** | Automatically submit applications on your behalf | 📋 Planned |
+| **Mobile App** | React Native companion app | 📋 Planned |
 
-<details>
-<summary>📸 Screenshots</summary>
-<p align="center">
-  <img src="docs/Dashboard.png" alt="CV analysis" width="800" />
-  <img src="docs/ProfilePage.png" alt="Profile management" width="800" />
-</p>
-</details>
+---
 
-## Tech Stack
-
-### Frontend
-- **React 18** + TypeScript + Vite
-- **Tailwind CSS** + shadcn/ui components
-- **React Router** for navigation
-- **Context API** for state management
-
-### Backend
-- Spring Boot 3.2 with Java 21
-- Spring Security with Argon2 password hashing
-- JPA/Hibernate with H2 (dev) / PostgreSQL (prod)
-- RestTemplate for service communication
-
-### AI Service
-- **Python 3.11** with FastAPI (Main AI service)
-- **OpenAI GPT-5.2** - Language model integration
-- **Sentence Transformers** - Semantic similarity matching
-- **PDFMiner & python-docx** - Document parsing
-- **JobSpy** - Indeed job scraping
-
-
-> ⚠️ This is a **prototype**. Many agents are still under active development.
-
-## Usage 
-You can run the project locally for testing and exploration.
-
-
-## Pre-requisites
-- Docker & Docker Compose (recommended)
-OR:
-- Java 21 and Maven
-- Python 3.11
-- OpenAI API key
-- Node.js 18
-
-
-## 🚀 Quick Start (Docker)
-
-The easiest way to run the full stack:
-
-```bash
-# 1. Clone repository
-git clone https://github.com/yourusername/jobapplier-ai.git
-cd jobapplier-ai
-
-# 2. Set your OpenAI API key
-echo "OPENAI_API_KEY=sk-your-key-here" > ai-service/.env
-
-# 3. Start all services
-docker-compose up --build
-
-# 4. Access the app
-# Frontend: http://localhost:5173
-# Backend:  http://localhost:8080
-# JobSpy:   http://localhost:8002
-```
-
-## Future work
-- LinkedIn job integration
-- Automated application submission
-- Interview prepation module
-- Mobile App (React Native)
-- Email notifications
-
-  
-## Usage
-
-### Getting Started
-1. **Upload Your Resume**
-   - Click the paperclip icon in the chat
-   - Upload PDF, DOCX, or TXT files
-   - The AI will extract skills and content
-
-2. **Paste Job Description**
-   - Copy a job posting into the chat
-   - The AI automatically detects job descriptions
-
-3. **Ask for Help**
-   - "Tailor my resume for this job"
-   - "What's my ATS match score?"
-   - "Generate a cover letter"
-
-### Example Commands
-
-```
-"Tailor my CV for this position"
-"Calculate my match score"
-"Write a cover letter for Deloitte"
-"What skills am I missing?"
-"Optimize my resume for ATS"
-```
 ## Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │   Frontend      │────▶│    Backend      │────▶│   AI Service    │
-│   (React)       │◄────│  (Spring Boot)  │◄────│   (FastAPI)     │
-│   TypeScript    │     │                 │     │                 │
-│ • Chat UI       │     │ • REST API      │     │ • GPT-4         │
-│ • Profile       │     │ • Auth          │     │ • Embeddings    │
-│ • Dashboard     │     │ • Job Mgmt      │     │ • Resume Parser │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-         │                       │                       │
-         └───────────────────────┴───────────────────────┘
-                              │
-                    ┌─────────────────┐
-                    │   PostgreSQL    │
-                    │                 │
-                    └─────────────────┘
+│   React 18      │◀────│  Spring Boot 3  │◀────│   FastAPI       │
+│   :5173         │     │  :8080          │     │   :8001         │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                    ┌────────────┼────────────┐
+                    │            │            │
+             ┌──────▼──┐  ┌─────▼─────┐  ┌──▼──────┐
+             │ JobSpy  │  │PostgreSQL │  │  Redis  │
+             │ :8002   │  │  :5432    │  │  :6379  │
+             └─────────┘  └───────────┘  └─────────┘
 ```
 
-## API Endpoints
+### Tech Stack
 
-### AI Service (`http://localhost:8001`)
-| Endpoint                        | Method |Description              |
-|---------------------------------|--------|---------------------------|
-| `/agents/neilwe-chat`           | POST   | Chat with AI assistant    |
-| `/agents/match-score`           | POST   | Calculate ATS match score |
-| `/agents/tailor-resume`         | POST   | Tailor resume for job     |
-| `/agents/generate-cover-letter` | POST   | Generate cover letter     |
-| `/agents/extract-cv`            | POST   | Parse resume pdf/docx     |
-| `/health`                       | GET    | Health check              |
+**Frontend:** React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui  
+**Backend:** Spring Boot 3.2 + Java 21 + Spring Security (Argon2) + JPA/Hibernate  
+**AI Service:** Python 3.11 + FastAPI + OpenAI GPT-4 + Sentence Transformers + PDFMiner  
+**Job Scraping:** JobSpy (Indeed primary, LinkedIn backup) — South Africa focused  
+**Database:** PostgreSQL 15 (production) / H2 (development)  
+**Cache:** Redis 7 (session management)  
+**Deployment:** Docker Compose
 
-### Jobs (`http://localhost:8002`)
-| Endpoint  | Method | Description         |
-|-----------|--------|--------------------|
-| `/seacrh` | POST   | Search Indeed jobs |
-| `/health` | GET    | Health check       |
+---
 
-### Backend API (`http://localhost:8080`)
-| Endpoint                             | Method |Description              |
-|--------------------------------------|--------|-------------------------|
-| `/api/auth/register`                 | POST   | User registration       |
-| `/api/auth/login`                    | POST   | User login              |
-| `/api/jobs/recommendations/{userId}` | GET    | Get personalized jobs   |
-| `/api/profile/{userId}`              | GET/PUT| User profile management |
-| `/api/ai/**`                         | Various| Proxy to AI service     |
+## Quick Start
 
+### Prerequisites
+
+- Docker & Docker Compose *(recommended)*  
+  OR: Java 21 + Maven, Python 3.11, Node.js 18+, OpenAI API key
+
+### Docker (Easiest)
+
+```bash
+# 1. Clone
+git clone https://github.com/yourusername/jobapplier-ai.git
+cd jobapplier-ai
+
+# 2. Set environment variables
+cp .env.example .env
+# Edit .env with your values:
+#   OPENAI_API_KEY=sk-your-key-here
+#   DB_PASSWORD=yourpassword
+#   JWT_SECRET=yoursecret
+
+# 3. Start all services
+docker-compose up --build
+
+# 4. Open the app
+open http://localhost:5173
+```
+
+### Access Points
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8080 |
+| AI Service | http://localhost:8001 |
+| JobSpy | http://localhost:8002 |
+
+---
+
+## API Reference
+
+### AI Service (:8001)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/agents/neilwe-chat` | POST | Chat with AI career coach |
+| `/agents/match-score` | POST | Calculate ATS match score |
+| `/agents/tailor-resume` | POST | Tailor resume for job posting |
+| `/agents/generate-cover-letter` | POST | Generate personalized cover letter |
+| `/agents/extract-cv` | POST | Parse and extract CV data (PDF/DOCX) |
+| `/health` | GET | Health check |
+
+### JobSpy Service (:8002)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/search` | POST | Search Indeed/LinkedIn jobs |
+| `/search-by-profile` | POST | Search using full user profile |
+| `/health` | GET | Health check |
+
+### Backend (:8080)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/register` | POST | Register new user |
+| `/api/auth/login` | POST | Login |
+| `/api/profile/{userId}` | GET/PUT | User profile management |
+| `/api/jobs/recommendations/{userId}` | GET | Personalized job recommendations |
+| `/api/ai/**` | Various | Proxy to AI service |
+
+---
 
 ## Configuration
 
-### Environment Variables
+Copy `.env.example` and fill in your values:
 
-| Variable               | Service    | Description                         |
-|------------------------|------------|-------------------------------------|
-| `OPENAI_API_KEY`       | AI Service | Required for GPT-5 features         |
-| `JOBSPY_SERVICE_URL`   | Backend    | Default: http://jobspy-service:8002 |
-| `AI_SERVICE_URL`       | Backend    | Default: http://ai-service:8001 |
-| `CORS_ALLOWED_ORIGINS` | Backend    | Default: http://localhost:5173 |
+```env
+OPENAI_API_KEY=sk-your-key-here
+DB_PASSWORD=your-postgres-password
+JWT_SECRET=your-jwt-secret-key
+AI_SERVICE_URL=http://ai-service:8001        # default
+JOBSPY_SERVICE_URL=http://jobspy-service:8002 # default
+CORS_ALLOWED_ORIGINS=http://localhost:5173    # add production domain
+```
 
-### Job search Configuration
-Edit jobspy_service.py to customize:
-Location: Johannesburg, Cape Town, Durban, Pretoria, Remote
-Job Types: full-time, part-time, contract, internship
-Sites: indeed (primary), linkedin (backup)
-Days: Last 30 days default
+To switch to PostgreSQL for local dev, set:
+```
+SPRING_PROFILES_ACTIVE=prod
+```
+
+---
 
 ## Testing
 
 ```bash
-# Run all tests
-./start.sh test
-
-# AI Service tests
+# AI Service
 cd ai-service && pytest tests/
 
-# Backend tests
+# Backend
 cd backend && ./mvnw test
 
-# Frontend tests
+# Frontend
 cd frontend && npm test
 
-# Test JobSpy
+# Manual: Test job scraper
 curl -X POST http://localhost:8002/search \
   -H "Content-Type: application/json" \
-  -d '{
-    "keyword": "software engineer",
-    "location": "Johannesburg",
-    "max_results": 5,
-    "days_old": 30,
-    "sites": ["indeed"]
-  }' | jq .
-
-expected:
-[
-  {
-    "id": "0",
-    "title": "Senior Software Engineer",
-    "company": "Standard Bank",
-    "location": "Johannesburg, GP, ZA",
-    "apply_url": "https://za.indeed.com/viewjob?jk=...",
-    "job_type": "fulltime"
-  }
-]
+  -d '{"keyword":"software engineer","location":"Johannesburg","max_results":5,"days_old":30}'
 ```
 
-## Docker Deployment
+---
 
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
+## Job Search Configuration
 
-# Or use the start script
-./start.sh docker
-```
+Edit `jobspy-service/jobspy_service.py` to customize:
+
+- **Locations:** Johannesburg, Cape Town, Durban, Pretoria, Remote
+- **Job types:** full-time, part-time, contract, internship
+- **Sites:** indeed (primary), linkedin (backup)
+- **Days old:** 30 days default
+
+---
+
+## Roadmap
+
+- [x] User authentication & profiles
+- [x] CV upload & AI extraction
+- [x] ATS match scoring
+- [x] Cover letter generation
+- [x] Live job listings (Indeed)
+- [x] Resume tailoring
+- [ ] LinkedIn job integration
+- [ ] Email notifications
+- [ ] Interview preparation module
+- [ ] Automated application submission
+- [ ] Mobile app (React Native)
+- [ ] POPIA compliance audit
+
+---
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'Add your feature'`
+4. Push to the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
+
 Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for more details.
 
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](docs/LICENSE) file for details.
+MIT License — see [LICENSE](docs/LICENSE) for details.
+
+---
 
 ## Acknowledgments
 
-- [OpenAI](https://openai.com/) for GPT-5.2 API
-- [shadcn/ui](https://ui.shadcn.com/) for beautiful UI components
+- [OpenAI](https://openai.com/) for GPT-4 API
 - [JobSpy](https://github.com/speedyapply/JobSpy) for job scraping
+- [shadcn/ui](https://ui.shadcn.com/) for UI components
+- [Spring Boot](https://spring.io/projects/spring-boot) for backend framework
 
-<p align="center">
-  Made with ❤️ for job seekers everywhere
-</p>
+---
+
+<p align="center">Made with ❤️ for job seekers everywhere · <a href="https://discord.com/channels/1466486232027500815">Join the community</a></p>

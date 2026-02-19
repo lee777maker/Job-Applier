@@ -19,7 +19,7 @@ public class AppConfig {
     private String aiServiceUrl;
 
     // Repositories are now auto-implemented by Spring Data JPA
-    // No need to define them as beans here
+
 
     @Bean
     public AuditService auditService() {
