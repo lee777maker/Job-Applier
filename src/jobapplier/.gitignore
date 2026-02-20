@@ -1,81 +1,334 @@
-############################
-# Secrets / environment
-############################
+# -----------------------------------------------------------------------------
+# IMPORTANT - Sensitive files that should NEVER be committed
+# -----------------------------------------------------------------------------
+
+# Environment variables and secrets
 .env
-.env.*
+.env.local
+.env.*.local
+.env.production
+.env.staging
 !.env.example
+
+# API keys and credentials
 *.key
 *.pem
-*.crt
 *.p12
-*.secret
-*.credentials
+*.pfx
 secrets/
-config/secrets/
+credentials/
 
-############################
-# Python
-############################
-venv/
-.venv/
-env/
-ENV/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
+# Important directory - contains sensitive documents
+# NOTE: Always omit this directory from commits
+docs/important/
 
-############################
-# Node / Frontend
-############################
-node_modules/
-dist/
-build/
-coverage/
-.vite/
+# -----------------------------------------------------------------------------
+# Frontend (React/Vite)
+# -----------------------------------------------------------------------------
 
-############################
-# Java / Maven / Gradle
-############################
-target/
-.gradle/
-*.class
-*.jar
-*.war
-*.ear
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
 
-############################
+# Build output
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+frontend/*.local
+
+# Testing
+frontend/coverage/
+frontend/.nyc_output/
+
+# Editor directories and files
+frontend/.vscode/*
+!frontend/.vscode/extensions.json
+frontend/.idea/
+frontend/*.suo
+frontend/*.ntvs*
+frontend/*.njsproj
+frontend/*.sln
+frontend/*.sw?
+
+# TypeScript
+frontend/*.tsbuildinfo
+
+# Cache
+frontend/.eslintcache
+frontend/.stylelintcache
+
+# -----------------------------------------------------------------------------
+# Backend (Spring Boot/Java)
+# -----------------------------------------------------------------------------
+
+# Compiled class files
+backend/target/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+
+# Maven
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+backend/dependency-reduced-pom.xml
+backend/buildNumber.properties
+backend/.mvn/timing.properties
+
+# Gradle (if used)
+backend/.gradle/
+backend/build/
+backend/gradle-app.setting
+backend/!gradle-wrapper.jar
+backend/.gradletasknamecache
+
+# IDE
+backend/.idea/
+backend/*.iws
+backend/*.iml
+backend/*.ipr
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.factorypath
+
+# Spring Boot
+backend/spring-boot-*.pid
+backend/spring-boot-*.port
+
 # Logs
-############################
+backend/logs/
+backend/*.log
+
+# H2 Database
+backend/*.db
+backend/*.mv.db
+backend/*.trace.db
+
+# -----------------------------------------------------------------------------
+# AI Service (Python/FastAPI)
+# -----------------------------------------------------------------------------
+
+# Python
+ai-service/__pycache__/
+ai-service/*.py[cod]
+ai-service/*$py.class
+ai-service/*.so
+ai-service/.Python
+ai-service/build/
+ai-service/develop-eggs/
+ai-service/dist/
+ai-service/downloads/
+ai-service/eggs/
+ai-service/.eggs/
+ai-service/lib/
+ai-service/lib64/
+ai-service/parts/
+ai-service/sdist/
+ai-service/var/
+ai-service/wheels/
+ai-service/*.egg-info/
+ai-service/.installed.cfg
+ai-service/*.egg
+ai-service/MANIFEST
+
+# Virtual environments
+ai-service/venv/
+ai-service/env/
+ai-service/ENV/
+ai-service/env.bak/
+ai-service/venv.bak/
+ai-service/.venv/
+
+# Pytest
+ai-service/.pytest_cache/
+ai-service/.coverage
+ai-service/htmlcov/
+ai-service/.tox/
+ai-service/.nox/
+
+# MyPy
+ai-service/.mypy_cache/
+ai-service/.dmypy.json
+ai-service/dmypy.json
+
+# IDEs
+ai-service/.idea/
+ai-service/.vscode/
+ai-service/*.swp
+ai-service/*.swo
+
+# -----------------------------------------------------------------------------
+# JobSpy Service (Python)
+# -----------------------------------------------------------------------------
+
+# Python
+jobspy-service/__pycache__/
+jobspy-service/*.py[cod]
+jobspy-service/*$py.class
+jobspy-service/*.so
+jobspy-service/.Python
+jobspy-service/build/
+jobspy-service/develop-eggs/
+jobspy-service/dist/
+jobspy-service/downloads/
+jobspy-service/eggs/
+jobspy-service/.eggs/
+jobspy-service/lib/
+jobspy-service/lib64/
+jobspy-service/parts/
+jobspy-service/sdist/
+jobspy-service/var/
+jobspy-service/wheels/
+jobspy-service/*.egg-info/
+jobspy-service/.installed.cfg
+jobspy-service/*.egg
+
+# Virtual environments
+jobspy-service/venv/
+jobspy-service/env/
+jobspy-service/ENV/
+jobspy-service/.venv/
+
+# Pytest
+jobspy-service/.pytest_cache/
+jobspy-service/.coverage
+
+# -----------------------------------------------------------------------------
+# Infrastructure & Deployment
+# -----------------------------------------------------------------------------
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Nginx SSL certificates
+infrastructure/nginx/ssl/*.crt
+infrastructure/nginx/ssl/*.key
+infrastructure/nginx/ssl/*.pem
+
+# Terraform (if used)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
+# Kubernetes secrets
+*k8s-secret*.yaml
+*secret*.yaml
+!*secret*-example.yaml
+
+# -----------------------------------------------------------------------------
+# Database
+# -----------------------------------------------------------------------------
+
+# PostgreSQL data volumes
+postgres_data/
+pgdata/
+
+# Redis data
+redis_data/
+*.rdb
+*.aof
+
+# Database dumps
+*.dump
+*.sql.dump
+*.backup
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+
+# Test outputs
+test-output/
+test-results/
+allure-results/
+coverage/
+.nyc_output/
+
+# Cypress/Playwright E2E
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+playwright-report/
+test-results/
+
+# -----------------------------------------------------------------------------
+# Logs
+# -----------------------------------------------------------------------------
+
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-############################
-# IDE / OS
-############################
-.vscode/*
-!.vscode/extensions.json
-.idea/
+# -----------------------------------------------------------------------------
+# OS Generated Files
+# -----------------------------------------------------------------------------
+
+# macOS
 .DS_Store
-Thumbs.db
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
 
-############################
-# Misc rubbish
-############################
-*.local
+
+# -----------------------------------------------------------------------------
+# IDE & Editor
+# -----------------------------------------------------------------------------
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+
 *.tmp
-*.swp
-*.swo
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.temp
+*.cache
+tmp/
+temp/
+.cache/
 
-#Google Cloud SDK
-google-cloud-sdk*
-*.tar.gz
-*.zip
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+
+# Uploads (if stored locally)
+uploads/
+public/uploads/
+
+# Generated documentation
+docs/generated/
+site/
+
+# Local notes
+NOTES.md
+TODO.md
+*.local.md
+
+# Backup files
+*.bak
+*.backup
+*~
